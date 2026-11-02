@@ -8,7 +8,7 @@ export interface ContactPerson {
   email: string;
 }
 
-export type ToolId = "parking" | "fee" | "waste" | "drainage" | "green" | "water";
+export type ToolId = "parking" | "fee" | "waste" | "drainage" | "green" | "water" | "program" | "levies" | "mamad" | "fireAccess";
 
 export type Block =
   | { kind: "text"; title: string; body: string }
@@ -20,14 +20,15 @@ export type Block =
   | { kind: "contactInfo"; title: string; lines: string[]; alert?: string }
   | { kind: "tracks" }
   | { kind: "bank" }
-  | { kind: "tool"; tool: ToolId };
+  | { kind: "tool"; tool: ToolId }
+  | { kind: "sources"; title: string; items: { title: string; url?: string; verified: boolean; note?: string }[] };
 
 export interface Chapter {
   id: string;
   title: string;
   short: string;
   description: string;
-  /** שם אסימון הצבע ב-tokens.css */
+  /** מפתח ייעוד הקרקע במקרא מבא"ת (src/data/landuse.ts) שקובע את צבע האגף */
   tone: string;
   department: string;
   hours: string;
@@ -76,7 +77,7 @@ export const chapters: Chapter[] = [
     title: "רישוי להיתר",
     short: "רישוי",
     description: "בדיקת בקשות להיתר, מסלולי הגשה, אגרות ופיקדון",
-    tone: "ink",
+    tone: "res",
     department: "מחלקת רישוי",
     hours: "קבלת קהל: א'-ה', 8:30-12:00 | טלפוני: 8:30-11:00",
     contacts: [
@@ -127,7 +128,7 @@ export const chapters: Chapter[] = [
     title: "פיקוח על הבנייה",
     short: "פיקוח",
     description: "מעקב על ביצוע הבנייה, אישור תחילת עבודות, תעודת גמר",
-    tone: "moss",
+    tone: "future",
     department: "מחלקת פיקוח",
     hours: "קבלת קהל: בזימון מראש | טלפוני: א'-ה', 8:30-11:00",
     contacts: [
@@ -169,7 +170,7 @@ export const chapters: Chapter[] = [
     title: "תכנון כבישים ותנועה",
     short: "כבישים",
     description: "תכנון תנועה, חניה, פיתוח שטח, כניסות למגרש",
-    tone: "clay",
+    tone: "road",
     department: "מחלקת תכנון כבישים",
     hours: "טלפוני: א'-ה', 8:30-11:00 | קבלת קהל: בזימון מראש",
     contacts: [
@@ -220,7 +221,7 @@ export const chapters: Chapter[] = [
     title: "ניקוז ונחלים",
     short: "ניקוז",
     description: "מערכות ניקוז, בורות חלחול, חיבור לרשת עירונית",
-    tone: "tide",
+    tone: "stream",
     department: "אגף ניקוז ונחלים",
     hours: "קבלת קהל: בזימון מראש",
     contacts: [
@@ -259,7 +260,7 @@ export const chapters: Chapter[] = [
     title: "נטיעות ופיתוח",
     short: "נטיעות",
     description: "גינון, נטיעות, השקיה, פקיד היערות",
-    tone: "fern",
+    tone: "spa",
     department: "נטיעות ופיתוח",
     hours: "",
     contacts: [],
@@ -283,7 +284,7 @@ export const chapters: Chapter[] = [
     title: "חשמל, מאור ואחזקת רמזורים",
     short: "חשמל",
     description: "תשתיות חשמל, תאורה, גנרטורים, עמדות טעינה",
-    tone: "amber",
+    tone: "eng",
     department: "אגף החשמל",
     hours: "קבלת קהל: א'-ה', 8:00-13:00, בזימון מראש",
     contacts: [
@@ -337,7 +338,7 @@ export const chapters: Chapter[] = [
     title: "תברואה ואצירת אשפה",
     short: "תברואה",
     description: "פתרונות אצירת אשפה, דחסנים, מצנחות שוט",
-    tone: "plum",
+    tone: "industry",
     department: "מחלקת בקרה וכלי אצירה",
     hours: "קבלת קהל: בזימון מראש",
     contacts: [
@@ -368,7 +369,7 @@ export const chapters: Chapter[] = [
     title: "תאגיד המים יובלים",
     short: "מים",
     description: "מערכות מים וביוב, נספח סניטרי, חיבור לרשת",
-    tone: "lagoon",
+    tone: "infra",
     department: "תאגיד המים יובלים",
     hours: "כתובת: רחוב אורט 18, קומה 6, פורט-סי",
     contacts: [
@@ -391,6 +392,28 @@ export const chapters: Chapter[] = [
           "חישוב הידראולי של מהנדס אינסטלציה",
         ],
       },
+      {
+        kind: "checklist",
+        id: "yuvallim",
+        title: "תהליך מול תאגיד יובלים",
+        items: [
+          "בשלב חוות הדעת: קבלת מפת GIS של קווי המים והביוב ואוגדן הרישוי והתשתיות של יובלים, דרך מחלקת מידע להיתר",
+          "תיאום מראש של חיבור מים זמני לבנייה",
+          "מד מים לבנייה: מותקן על ידי התאגיד או בפיקוחו, אחרי תשלום, ורק כשיש תשתית בגבול המגרש",
+          "העברת כתב ההתחייבות וההיתר למחלקת הגבייה לפתיחת חשבון ומד",
+          "התקנת מכשיר מונע זרימה חוזרת (מז\"ח) בראש מערכת המים, על ידי מתקין מוסמך",
+          "תשלום דמי הקמה למים ולביוב לפני חוות הדעת לתעודת גמר",
+        ],
+      },
+      {
+        kind: "sources",
+        title: "מקורות: מים וביוב",
+        items: [
+          { title: "יובלים: הנחיות לקבלת אישור לאספקת מים וחיבור ביוב לבניין חדש", url: "https://www.yuvallim.co.il/", verified: false, note: "נקרא מתקציר חיפוש" },
+          { title: "תקנות בריאות העם (התקנת מכשיר מונע זרימת מים חוזרת), התשנ\"ב-1992", verified: false, note: "סוג המכשיר לפי סיווג: לאימות" },
+          { title: "הוראות למתקני תברואה (הל\"ת) ותקנות התכנון והבנייה (תכן הבנייה) (תברואה), תש\"ף-2019", verified: false, note: "מרחקים בין תאי בקרה: לאימות" },
+        ],
+      },
       { kind: "tool", tool: "water" },
     ],
   },
@@ -399,7 +422,7 @@ export const chapters: Chapter[] = [
     title: "איגוד ערים לאיכות הסביבה",
     short: "סביבה",
     description: "סקר קרקע, אסבסט, דוח אקוסטי, נגר עילי",
-    tone: "olive",
+    tone: "nature",
     department: "איגוד ערים לאיכות הסביבה",
     hours: "כתובת: רחוב יאיר 2, אשדוד",
     contacts: [{ name: "איתי מירז", role: "מרכז תכנון סביבתי", phone: "08-8519500", email: "eitay@env.org.il" }],
@@ -453,6 +476,109 @@ export const chapters: Chapter[] = [
       },
     ],
   },
+  {
+    id: "fire",
+    title: "כבאות והצלה",
+    short: "כבאות",
+    description: "דרך גישה ורחבת היערכות, ברזי כיבוי, סיווג גובה, ספח בטיחות אש",
+    tone: "employ",
+    department: "רשות הכבאות וההצלה, מחוז דרום",
+    hours: "",
+    contacts: [],
+    blocks: [
+      {
+        kind: "sources",
+        title: "מסגרת חוקית והוראות",
+        items: [
+          { title: "תקנות התכנון והבנייה (בקשה להיתר, תנאיו ואגרות), תש\"ל-1970, תוספת שנייה חלק ג' (פרק 3.9: בטיחות אש)", url: "https://www.nevo.co.il/law_html/law01/044_046.htm", verified: false },
+          { title: "הוראת נציב 532: ספח בטיחות אש ומקרא אחיד (בתוקף מ-1.2.2022)", verified: false },
+          { title: "הוראת נציב 550: מערכות גילוי וכיבוי אש (עדכון 7.2.2022)", verified: false },
+          { title: "כללי המים (אספקת מים לכבאות והצלה), תשע\"ח-2018", url: "https://www.nevo.co.il/law_html/law01/501_852.htm", verified: false },
+          { title: "ת\"י 1596 (מערכות מתזים), ת\"י 1220 (גילוי), ת\"י 412 (עומסים)", verified: false },
+        ],
+      },
+      {
+        kind: "checklist",
+        id: "access",
+        title: "גישה לרכב כיבוי",
+        items: [
+          "דרך גישה ברוחב 4 מ' לפחות, פנויה ממכשולים (הקלה עד 3.70 מ' בחוות דעת הנדסית ובתיאום)",
+          "רחבת היערכות 6×12 מ' לפחות",
+          "הרחבה במרחק עד 6 מ' מהחזית שבה חלון החילוץ",
+          "ברז כיבוי במרחק עד 30 מ' מהכניסה לבניין",
+          "ברזי כיבוי ברחוב: מרווח עד 120 מ' באזור מגורים, עד 80 מ' בתעשייה",
+          "דרך ורחבה מתוכננות לעומס רכב כיבוי לפי ת\"י 412",
+        ],
+      },
+      {
+        kind: "checklist",
+        id: "submit",
+        title: "בקשה להיתר ותעודת גמר",
+        items: [
+          "ספח בטיחות אש לפי הוראת נציב 532, עם המקרא האחיד",
+          "סימון דרך הגישה, רחבת ההיערכות וחלונות החילוץ בתכנית הפיתוח",
+          "בניין גבוה: מתזים בשטחים המשותפים",
+          "בניין רב קומות (מעל 29 מ'): שני חדרי מדרגות ומעלית אלונקה",
+          "דרך צרה מהתקן (תמ\"א 38, פינוי בינוי): מתזים לפי הבהרת רשות הכבאות 09/2017",
+          "בסיום הבנייה: הצהרת מהנדס שהרחבה ונתיב הגישה בוצעו לפי התכנון",
+        ],
+      },
+      { kind: "tool", tool: "fireAccess" },
+    ],
+  },
+  {
+    id: "hfc",
+    title: "פיקוד העורף: מיגון",
+    short: "מיגון",
+    description: "מרחב מוגן דירתי, קומתי ומוסדי, מפרטים ואישור פיקוד העורף",
+    tone: "rail",
+    department: "פיקוד העורף, ענף הנדסה",
+    hours: "",
+    contacts: [],
+    blocks: [
+      {
+        kind: "sources",
+        title: "מסגרת חוקית ומפרטים",
+        items: [
+          { title: "תקנות ההתגוננות האזרחית (מפרטים לבניית מקלטים), תש\"ן-1990, על תיקוניהן", url: "https://www.nevo.co.il/law_html/law01/125_020.htm", verified: false },
+          { title: "מפרט פיקוד העורף לתכנון ממ\"ד: לבדוק את הגרסה העדכנית (אוקטובר 2024; עדכון 2026 לא אומת)", verified: false },
+          { title: "מפרט חדרים רטובים במרחב מוגן, אוקטובר 2024", verified: false },
+          { title: "ת\"י 4422 (חלונות הדף), ת\"י 4570 (מערכות סינון ואוורור)", verified: false },
+        ],
+      },
+      {
+        kind: "checklist",
+        id: "mamad",
+        title: "מרחב מוגן דירתי (ממ\"ד)",
+        items: [
+          "שטח נטו 9 מ\"ר לפחות, בלי עובי הקירות",
+          "נפח 22.5 מ\"ק לפחות",
+          "קיר חוץ מבטון מזוין 25 ס\"מ לפחות; 30 ס\"מ בקיר עם חלון הדף נגרר",
+          "גובה פנימי לפי המפרט (במקורות משניים 2.50 עד 2.80 מ')",
+          "חלון הדף ומסגרת לפי ת\"י 4422",
+          "דלת הדף לפי המפרט",
+          "מערכת סינון ואוורור לפי ת\"י 4570",
+          "אישור תכנית הממ\"ד על ידי פיקוד העורף",
+        ],
+      },
+      { kind: "tool", tool: "mamad" },
+    ],
+  },
+  {
+    id: "program",
+    title: "פרוגרמה ומטלות יזם",
+    short: "פרוגרמה",
+    description: "צורכי ציבור לפי מספר יח\"ד, היטלים, אגרות ומטלות היזם",
+    tone: "public",
+    department: "מינהל הנדסה, אגף תכנון: מחלקת פרוגרמות ותועלות ציבוריות",
+    hours: "",
+    contacts: [],
+    blocks: [
+      { kind: "text", title: "למה פרוגרמה", body: "תכנית שמוסיפה יחידות דיור מוסיפה תושבים, ולכן גם ביקוש לגנים, לבתי ספר, למבני ציבור ולשטחים פתוחים. הפרוגרמה מתרגמת את מספר יח\"ד לשטחים הנדרשים, לפי נורמות ארציות ועירוניות." },
+      { kind: "tool", tool: "program" },
+      { kind: "tool", tool: "levies" },
+    ],
+  },
 ];
 
 export const tools: { id: ToolId; title: string; short: string; chapter: string; purpose: string }[] = [
@@ -462,6 +588,10 @@ export const tools: { id: ToolId; title: string; short: string; chapter: string;
   { id: "waste", title: "מחשבון אשפה", short: "אשפה", chapter: "sanitation", purpose: "נפחי אצירה רטובה ויבשה, דחסניות, טמונים ומחזור" },
   { id: "water", title: "מחשבון מים", short: "מים", chapter: "water", purpose: "צריכה סניטרית והשקיה שנתית, ספיקת שיא וקוטר צינור" },
   { id: "fee", title: "מחשבון אגרות", short: "אגרות", chapter: "licensing", purpose: "אומדן אגרת בנייה ופיקדון" },
+  { id: "program", title: "מחשבון פרוגרמה לצורכי ציבור", short: "פרוגרמה", chapter: "program", purpose: "גנים, כיתות, מבני ציבור ושצ\"פ לפי מספר יח\"ד ונורמות שהוזנו" },
+  { id: "levies", title: "מחשבון מטלות יזם", short: "מטלות יזם", chapter: "program", purpose: "היטלי סלילה, תיעול ושצ\"פ, דמי הקמה ואגרת בנייה, לפי תעריפים שהוזנו" },
+  { id: "mamad", title: "בדיקת ממ\"ד", short: "ממ\"ד", chapter: "hfc", purpose: "שטח נטו, נפח, גובה ועובי קיר מול המינימום, עם שרטוט בקנה מידה" },
+  { id: "fireAccess", title: "בדיקת גישת כבאות", short: "כבאות", chapter: "fire", purpose: "סיווג גובה, דרך גישה, רחבת היערכות וברז כיבוי, עם סכמה צבעונית" },
 ];
 
 export interface DirectoryEntry extends ContactPerson {

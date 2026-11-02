@@ -40,8 +40,8 @@ await test("דף הבית נטען, בלי שגיאות, עם מודל ומקר�
   const { page, errors, ctx } = await newPage({ viewport: { width: 1440, height: 900 } });
   await page.goto(BASE + "/#/");
   await page.getByRole("heading", { name: /מהאוגדן/ }).waitFor();
-  assert(await page.locator(".slab").count() === 9, "expected 9 floors");
-  assert(await page.locator(".legend a").count() === 9, "expected 9 legend entries");
+  assert(await page.locator(".slab").count() === 12, "expected 12 floors");
+  assert(await page.locator(".legend a").count() === 12, "expected 12 legend entries");
   await page.waitForTimeout(1400);
   await page.screenshot({ path: SHOTS + "home-desktop.png", fullPage: true });
   assert(await noHScroll(page), "horizontal scroll on desktop");
@@ -53,7 +53,7 @@ await test("כל קישורי הסרגל העליון נפתחים, הסרגל �
   const { page, errors, ctx } = await newPage({ viewport: { width: 1440, height: 900 } });
   await page.goto(BASE + "/#/");
   const links = await page.locator(".navrow a").evaluateAll((as) => as.map((a) => a.getAttribute("href")));
-  assert(links.length === 13, `expected 13 nav links, got ${links.length}`);
+  assert(links.length === 16, `expected 16 nav links, got ${links.length}`);
   for (const h of links) {
     await page.locator(`.navrow a[href="${h}"]`).click();
     await page.waitForFunction((h) => location.hash === h, h);
@@ -123,7 +123,7 @@ await test("תיק בקשה: פרויקט לדוגמה ממלא את הדוח ו
   const report = page.getByTestId("report");
   await report.getByText("בניין מגורים לדוגמה").waitFor();
   await report.getByText("עומד").first().waitFor();
-  assert(await report.locator(".ring").count() === 8, "expected 8 readiness rings");
+  assert(await report.locator(".ring").count() === 10, "expected 10 readiness rings");
   assert(await report.locator(".gantt-row.mine").count() === 1, "selected track not marked");
   const parkingRow = await report.locator("tr", { hasText: "חניה" }).first().textContent();
   assert(/\d+ חניות/.test(parkingRow), "parking row missing value");
@@ -190,7 +190,7 @@ await test("ספר טלפונים: חיפוש וסינון לפי מחלקה", a
 
 await test("נייד 390px: בלי גלילה אופקית בכל הדפים", async () => {
   const { page, ctx } = await newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
-  const routes = ["#/", "#/chapter/licensing", "#/chapter/roads", "#/chapter/environment", "#/tool/parking", "#/tool/water", "#/tools", "#/contacts", "#/project", "#/check"];
+  const routes = ["#/", "#/chapter/licensing", "#/chapter/roads", "#/chapter/environment", "#/tool/parking", "#/tool/water", "#/tools", "#/contacts", "#/project", "#/check", "#/chapter/fire", "#/tool/program", "#/tool/levies", "#/tool/mamad"];
   for (const r of routes) {
     await page.goto(BASE + "/" + r);
     await page.locator("main h1").first().waitFor();
@@ -210,7 +210,7 @@ await test("נייד 390px: בלי גלילה אופקית בכל הדפים", a
 await test("תנועה מופחתת ומצב כהה: הדף מציג את כל המידע", async () => {
   const { page, ctx } = await newPage({ viewport: { width: 1280, height: 900 }, reducedMotion: "reduce", colorScheme: "dark" });
   await page.goto(BASE + "/#/");
-  assert(await page.locator(".legend a").count() === 9, "legend missing under reduced motion");
+  assert(await page.locator(".legend a").count() === 12, "legend missing under reduced motion");
   assert(await page.getByTestId("chapter-card-water").isVisible(), "chapter cards missing");
   await page.screenshot({ path: SHOTS + "home-dark-reduced.png" });
   await ctx.close();
@@ -265,6 +265,49 @@ await test("בדיקת תכנית: דוגמה מסמנת רמזור, וטעינ�
   assert(await status("generators") === "ok", "generator not updated from CSV");
   await page.waitForTimeout(800);
   await page.screenshot({ path: SHOTS + "check.png", fullPage: true });
+  await ctx.close();
+});
+
+await test("קבועים: שינוי תעריף אגרה משנה את התוצאה, ואיפוס מחזיר", async () => {
+  const { page, ctx } = await newPage({ viewport: { width: 1440, height: 1000 } });
+  await page.goto(BASE + "/#/tool/fee");
+  await page.getByTestId("gfa").first().fill("100");
+  await page.getByTestId("kpanel-fee").locator("summary").click();
+  await page.getByTestId("k-fee.perSqm").fill("200");
+  await page.waitForTimeout(1000);
+  assert((await page.locator('[aria-label="אגרת בנייה משוערת"] .v').textContent()).includes("20,000"), "fee did not use edited constant");
+  await page.getByRole("button", { name: /החזרת אגרת בנייה/ }).click();
+  await page.waitForTimeout(1000);
+  assert((await page.locator('[aria-label="אגרת בנייה משוערת"] .v').textContent()).includes("18,800"), "reset failed");
+  await page.getByTestId("doc-fee").locator("summary").click();
+  await page.screenshot({ path: SHOTS + "constants.png", fullPage: true });
+  await ctx.close();
+});
+
+await test("ממ\"ד, כבאות ופרוגרמה: מחשבונים חדשים עובדים", async () => {
+  const { page, ctx, errors } = await newPage({ viewport: { width: 1440, height: 1000 } });
+  await page.goto(BASE + "/#/tool/mamad");
+  await page.getByTestId("mamad-l").fill("3"); await page.getByTestId("mamad-w").fill("2.8"); await page.getByTestId("mamad-h").fill("2.5"); await page.getByTestId("mamad-wall").fill("25");
+  await page.getByText("8.4 מ\"ר מול מינימום 9 מ\"ר").waitFor();
+  await page.waitForTimeout(800);
+  await page.screenshot({ path: SHOTS + "mamad.png", fullPage: true });
+  await page.goto(BASE + "/#/tool/fireAccess");
+  await page.getByTestId("fire-height").fill("31"); await page.getByTestId("fire-road").fill("3.8");
+  await page.getByText(/בניין רב קומות/).first().waitFor();
+  await page.waitForTimeout(800);
+  await page.screenshot({ path: SHOTS + "fire.png", fullPage: true });
+  await page.goto(BASE + "/#/tool/program");
+  await page.getByTestId("units").first().fill("500"); await page.getByTestId("household").fill("3.3");
+  await page.getByLabel("גני ילדים (3 עד 6): קבוצת גיל").fill("6");
+  await page.getByLabel("גני ילדים (3 עד 6): השתתפות").fill("100");
+  await page.getByLabel("גני ילדים (3 עד 6): משתמשים ליחידה").fill("30");
+  await page.getByText("אוכלוסייה צפויה").waitFor();
+  await page.waitForTimeout(800);
+  await page.screenshot({ path: SHOTS + "program.png", fullPage: true });
+  for (const id of ["fire", "hfc", "program", "water"]) { await page.goto(BASE + "/#/chapter/" + id); await page.locator("main h1").first().waitFor(); }
+  await page.goto(BASE + "/#/chapter/fire"); await page.waitForTimeout(800);
+  await page.screenshot({ path: SHOTS + "chapter-fire.png", fullPage: true });
+  assert(errors.length === 0, "console errors: " + errors.join(" | "));
   await ctx.close();
 });
 

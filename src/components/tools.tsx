@@ -1,12 +1,14 @@
 import { AnimatePresence, motion } from "framer-motion";
 import type { ToolId } from "../data/permitData";
 import {
-  FEE_PER_SQM, calcDrainage, calcFee, calcGreen, calcParking, calcWaste, calcWater,
+  calcDrainage, ratioText, calcFee, calcGreen, calcParking, calcWaste, calcWater,
   irrigationRates, parkingRatios, waterUses, type ParkingStandard,
 } from "../logic/calculators";
-import { uid, updateProject, useProject } from "../state/store";
+import { uid, updateProject, useK, useProject } from "../state/store";
 import { Metric, NumField, Seg, Stamp, Steps } from "./ui";
 import { SitePlan, StackBar, Tank, Waffle } from "./viz";
+import { ToolShell } from "./ToolShell";
+import { FireAccessTool, LeviesTool, MamadTool, ProgramTool } from "./tools2";
 
 const fmt = (n: number, d = 0) => n.toLocaleString("he-IL", { maximumFractionDigits: d });
 
@@ -27,7 +29,8 @@ const Reveal = ({ show, children }: { show: boolean; children: React.ReactNode }
 /* ---------------- חניה ---------------- */
 export function ParkingTool() {
   const p = useProject();
-  const r = calcParking(p.parking, p.standard);
+  const k = useK();
+  const r = calcParking(p.parking, p.standard, k);
   const setEntry = (id: string, patch: Partial<(typeof p.parking)[number]>) =>
     updateProject({ parking: p.parking.map((e) => (e.id === id ? { ...e, ...patch } : e)) });
   return (
@@ -44,10 +47,10 @@ export function ParkingTool() {
               <label className="field">
                 <span>שימוש {i + 1}</span>
                 <select className="input" value={e.useType} onChange={(ev) => setEntry(e.id, { useType: ev.target.value })} data-testid={`parking-use-${i}`}>
-                  {Object.entries(parkingRatios).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                  {Object.entries(parkingRatios).map(([kk, v]) => <option key={kk} value={kk}>{v.label}</option>)}
                 </select>
               </label>
-              <NumField label={c.inputLabel} value={e.units} onChange={(units) => setEntry(e.id, { units })} testId={`parking-units-${i}`} hint={c[p.standard].description} />
+              <NumField label={c.inputLabel} value={e.units} onChange={(units) => setEntry(e.id, { units })} testId={`parking-units-${i}`} hint={ratioText(k[`pk.${e.useType}.${p.standard}`], c.unit)} />
               <div className="row" style={{ justifyContent: "flex-end" }}>
                 <button type="button" className="btn sm danger" disabled={p.parking.length <= 1} onClick={() => updateProject({ parking: p.parking.filter((x) => x.id !== e.id) })}>
                   הסרת שימוש
@@ -85,9 +88,9 @@ export function ParkingTool() {
           <table>
             <thead><tr><th>ייעוד</th><th>יחידה</th><th>מקדם, {p.standard === "ashdod" ? "אשדוד" : "ארצי"}</th><th>תפעולי</th></tr></thead>
             <tbody>
-              {Object.entries(parkingRatios).map(([k, v]) => (
-                <tr key={k} className={p.parking.some((e) => e.useType === k) ? "active" : ""}>
-                  <td>{v.label}</td><td>{v.unit}</td><td>{v[p.standard].description}</td><td>{v.operational.description}</td>
+              {Object.entries(parkingRatios).map(([kk, v]) => (
+                <tr key={kk} className={p.parking.some((e) => e.useType === kk) ? "active" : ""}>
+                  <td>{v.label}</td><td>{v.unit}</td><td>{ratioText(k[`pk.${kk}.${p.standard}`], v.unit)}</td><td>{ratioText(k[`pk.${kk}.op`], v.unit)}</td>
                 </tr>
               ))}
             </tbody>
@@ -102,11 +105,12 @@ export function ParkingTool() {
 /* ---------------- אגרות ---------------- */
 export function FeeTool() {
   const p = useProject();
-  const r = calcFee(p.gfa);
+  const k = useK();
+  const r = calcFee(p.gfa, k);
   return (
     <div className="stack" data-tool="fee">
       <div className="grid g2">
-        <NumField label='שטח בנייה מוצע (מ"ר)' value={p.gfa} onChange={(gfa) => updateProject({ gfa })} linked testId="gfa" hint={`תעריף משוער: ₪${FEE_PER_SQM} למ"ר`} />
+        <NumField label='שטח בנייה מוצע (מ"ר)' value={p.gfa} onChange={(gfa) => updateProject({ gfa })} linked testId="gfa" hint={`תעריף: ₪${r.rate} למ"ר (ניתן לשינוי בקבועי החישוב)`} />
       </div>
       {r.area <= 0 && <Empty>הזינו שטח בנייה כדי לקבל אומדן אגרה ופיקדון.</Empty>}
       <Reveal show={r.area > 0}>
@@ -124,7 +128,8 @@ export function FeeTool() {
 /* ---------------- אשפה ---------------- */
 export function WasteTool() {
   const p = useProject();
-  const r = calcWaste(p.units, p.floors);
+  const k = useK();
+  const r = calcWaste(p.units, p.floors, k);
   return (
     <div className="stack" data-tool="waste">
       <div className="grid g2">
@@ -182,7 +187,8 @@ export function WasteTool() {
 /* ---------------- ניקוז ---------------- */
 export function DrainageTool() {
   const p = useProject();
-  const r = calcDrainage(p.plot, p.footprint, p.green);
+  const k = useK();
+  const r = calcDrainage(p.plot, p.footprint, p.green, k);
   return (
     <div className="stack" data-tool="drainage">
       <div className="grid g3">
@@ -263,7 +269,8 @@ export function DrainageTool() {
 /* ---------------- שטח ירוק ---------------- */
 export function GreenTool() {
   const p = useProject();
-  const r = calcGreen(p.plot, p.footprint, p.units);
+  const k = useK();
+  const r = calcGreen(p.plot, p.footprint, p.units, k);
   return (
     <div className="stack" data-tool="green">
       <div className="grid g3">
@@ -304,7 +311,8 @@ export function GreenTool() {
 /* ---------------- מים ---------------- */
 export function WaterTool() {
   const p = useProject();
-  const r = calcWater(p.plot, p.footprint, p.irrigation, p.water);
+  const k = useK();
+  const r = calcWater(p.plot, p.footprint, p.irrigation, p.water, k);
   const setEntry = (id: string, patch: Partial<(typeof p.water)[number]>) => updateProject({ water: p.water.map((e) => (e.id === id ? { ...e, ...patch } : e)) });
   return (
     <div className="stack" data-tool="water">
@@ -314,19 +322,19 @@ export function WaterTool() {
         <label className="field">
           <span>סוג צמחייה והשקיה</span>
           <select className="input" value={p.irrigation} onChange={(e) => updateProject({ irrigation: e.target.value })}>
-            {Object.entries(irrigationRates).map(([k, v]) => <option key={k} value={k}>{v.label}, {v.rate} מ"ק למ"ר בשנה</option>)}
+            {Object.entries(irrigationRates).map(([kk, v]) => <option key={kk} value={kk}>{v.label}, {k[`wt.irr.${kk}`]} מ"ק למ"ר בשנה</option>)}
           </select>
         </label>
       </div>
       <div className="stack" style={{ gap: 8 }}>
         {p.water.map((e, i) => {
-          const c = waterUses[e.type];
+          const c = { ...waterUses[e.type], perUnit: e.type === "residential" ? k["wt.personsPerUnit"] : waterUses[e.type].perUnit, description: `${k[`wt.${e.type}`]} ליטר ליום` };
           return (
             <div key={e.id} className="grid g4" style={{ alignItems: "end", padding: 12, background: "var(--paper)", border: "1px solid var(--rule)" }}>
               <label className="field">
                 <span>ייעוד {i + 1}</span>
                 <select className="input" value={e.type} onChange={(ev) => setEntry(e.id, { type: ev.target.value })}>
-                  {Object.entries(waterUses).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                  {Object.entries(waterUses).map(([kk, v]) => <option key={kk} value={kk}>{v.label}</option>)}
                 </select>
               </label>
               <NumField label={`כמות, ${c.unitLabel}`} value={e.units} onChange={(units) => setEntry(e.id, { units })} hint={c.description} testId={`water-units-${i}`} />
@@ -358,11 +366,17 @@ export function WaterTool() {
   );
 }
 
+const shell = (id: string, T: () => JSX.Element) => () => <ToolShell id={id}><T /></ToolShell>;
+
 export const toolComponents: Record<ToolId, () => JSX.Element> = {
-  parking: ParkingTool,
-  fee: FeeTool,
-  waste: WasteTool,
-  drainage: DrainageTool,
-  green: GreenTool,
-  water: WaterTool,
+  parking: shell("parking", ParkingTool),
+  fee: shell("fee", FeeTool),
+  waste: shell("waste", WasteTool),
+  drainage: shell("drainage", DrainageTool),
+  green: shell("green", GreenTool),
+  water: shell("water", WaterTool),
+  program: shell("program", ProgramTool),
+  levies: shell("levies", LeviesTool),
+  mamad: shell("mamad", MamadTool),
+  fireAccess: shell("fireAccess", FireAccessTool),
 };

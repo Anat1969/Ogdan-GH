@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { allChecklistKeys, checklistBlocks, chapters, itemKey, permitTracks, source } from "../data/permitData";
 import { calcDrainage, calcFee, calcGreen, calcParking, calcWaste, calcWater } from "../logic/calculators";
 import { href } from "../state/router";
-import { exampleProject, projectStore, updateProject, useChecks, useProject } from "../state/store";
+import { exampleProject, projectStore, updateProject, useChecks, useK, useProject } from "../state/store";
 import { Metric, NumField, PageHead, Progress, Seg, Sheet, Stamp } from "../components/ui";
 import { Icon } from "../components/icons";
 import { Ring } from "../components/viz";
@@ -11,15 +11,16 @@ const fmt = (n: number, d = 0) => n.toLocaleString("he-IL", { maximumFractionDig
 
 export default function Project() {
   const p = useProject();
+  const k = useK();
   const checks = useChecks();
   useEffect(() => { document.title = "תיק הבקשה · אוגדן הנחיות להיתר"; }, []);
 
-  const parking = calcParking(p.parking, p.standard);
-  const drainage = calcDrainage(p.plot, p.footprint, p.green);
-  const green = calcGreen(p.plot, p.footprint, p.units);
-  const waste = calcWaste(p.units, p.floors);
-  const water = calcWater(p.plot, p.footprint, p.irrigation, p.water);
-  const fee = calcFee(p.gfa);
+  const parking = calcParking(p.parking, p.standard, k);
+  const drainage = calcDrainage(p.plot, p.footprint, p.green, k);
+  const green = calcGreen(p.plot, p.footprint, p.units, k);
+  const waste = calcWaste(p.units, p.floors, k);
+  const water = calcWater(p.plot, p.footprint, p.irrigation, p.water, k);
+  const fee = calcFee(p.gfa, k);
   const track = permitTracks.find((t) => t.id === p.track)!;
 
   const per = chapters.map((c) => {

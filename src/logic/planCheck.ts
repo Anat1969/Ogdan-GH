@@ -2,6 +2,7 @@
 // סטטוס: ok עומד, warn חסר עד 10%, bad חסר יותר מ-10%, idle אין נתון.
 import { calcDrainage, calcGreen, calcParking, calcWaste, calcWater } from "./calculators";
 import type { Project } from "../state/store";
+import { mergeK } from "./constants";
 
 export type CheckStatus = "ok" | "warn" | "bad" | "idle";
 
@@ -50,11 +51,12 @@ function status(required: number | null, proposed: number | null): { status: Che
 
 export function runPlanCheck(p: Project): PlanCheck[] {
   const prop = p.proposed ?? {};
-  const parking = calcParking(p.parking, p.standard);
-  const drainage = calcDrainage(p.plot, p.footprint, p.green);
-  const green = calcGreen(p.plot, p.footprint, p.units);
-  const waste = calcWaste(p.units, p.floors);
-  const water = calcWater(p.plot, p.footprint, p.irrigation, p.water);
+  const k = mergeK(p.k);
+  const parking = calcParking(p.parking, p.standard, k);
+  const drainage = calcDrainage(p.plot, p.footprint, p.green, k);
+  const green = calcGreen(p.plot, p.footprint, p.units, k);
+  const waste = calcWaste(p.units, p.floors, k);
+  const water = calcWater(p.plot, p.footprint, p.irrigation, p.water, k);
   const height = n(prop.height_m);
 
   const req: Record<string, { v: number | null; basis: string }> = {

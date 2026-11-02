@@ -28,6 +28,10 @@ const paths: Record<string, string> = {
   car: "M5 11l2-5h10l2 5 M3 11h18v6H3z M7 17v2 M17 17v2 M7 14h.5 M16.5 14h.5",
   bin: "M4 6h16 M6 6l1 15h10l1-15",
   tree: "M12 21v-7 M12 14a5 5 0 1 0 0-10 5 5 0 0 0 0 10z",
+  fire: "M12 3c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2.5 1.5-4 2.5-5 0 2 1 3 2 3 0-3-1-5.5.5-8z",
+  shield: "M12 3l8 3v6c0 4.5-3.5 8-8 9-4.5-1-8-4.5-8-9V6z M9 12h6 M12 9v6",
+  program: "M3 21h18 M5 21V10l7-5 7 5v11 M9 21v-5h6v5 M9 12h.5 M14.5 12h.5",
+  ruler: "M3 17 17 3l4 4L7 21z M7 13l2 2 M10 10l2 2 M13 7l2 2",
   plus: "M12 5v14 M5 12h14",
   minus: "M5 12h14",
   reset: "M4 12a8 8 0 1 0 2.5-5.8 M4 4v5h5",
@@ -42,8 +46,9 @@ const paths: Record<string, string> = {
 export const chapterIcon: Record<string, string> = {
   licensing: "licensing", supervision: "supervision", roads: "roads", drainage: "drainage", planting: "planting",
   electricity: "electricity", sanitation: "sanitation", water: "water", environment: "environment",
+  fire: "fire", hfc: "shield", program: "program",
 };
-export const toolIcon: Record<string, string> = { parking: "car", drainage: "drainage", green: "tree", waste: "bin", water: "water", fee: "coin" };
+export const toolIcon: Record<string, string> = { parking: "car", drainage: "drainage", green: "tree", waste: "bin", water: "water", fee: "coin", program: "program", levies: "coin", mamad: "shield", fireAccess: "fire" };
 
 export function Icon({ name, size = 20, ...rest }: { name: string; size?: number } & SVGProps<SVGSVGElement>) {
   return (

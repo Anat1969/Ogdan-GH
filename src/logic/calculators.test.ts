@@ -122,3 +122,47 @@ describe("בדיקת תכנית", () => {
     expect(parsePlanFile("עצים בוגרים בתכנית הנטיעה\t7")).toEqual({ trees: "7" });
   });
 });
+
+import { calcFireAccess, calcLevies, calcMamad, calcProgram } from "./calculators2";
+import { DEFAULT_K } from "./constants";
+import { calcFee as feeK, calcParking as parkK } from "./calculators";
+
+describe("קבועים ניתנים לשינוי", () => {
+  it("שינוי תעריף אגרה ומקדם חניה משנה את התוצאה", () => {
+    expect(feeK(100, { ...DEFAULT_K, "fee.perSqm": 200 }).fee).toBe(20000);
+    expect(parkK([{ id: "a", useType: "office", units: "220" }], "ashdod", { ...DEFAULT_K, "pk.office.ashdod": 1 / 10 }).total).toBe(22);
+  });
+});
+
+describe("מחשבונים נוספים", () => {
+  it("פרוגרמה: יחידות לפי נורמות שהוזנו", () => {
+    const r = calcProgram(1000, { household: "3", spaPerCapita: "5", rows: [{ id: "k", name: "גנים", cohortPct: "6", participation: "100", perUnit: "30", plotPerUnit: "0.5", builtPerUnit: "140" }, { id: "x", name: "ריק", cohortPct: "", participation: "", perUnit: "", plotPerUnit: "", builtPerUnit: "" }] })!;
+    expect(r.population).toBe(3000);
+    expect(r.rows[0].units).toBe(6); // 3000 × 6% = 180 ÷ 30
+    expect(r.rows[0].plot).toBe(3);
+    expect(r.rows[1].ok).toBe(false);
+    expect(r.spa).toBe(15000);
+  });
+  it("פרוגרמה בלי גודל משק בית: אין תוצאה", () => {
+    expect(calcProgram(100, { household: "", spaPerCapita: "", rows: [] })).toBeNull();
+  });
+  it("היטלים: קרקע + בנייה + יח\"ד", () => {
+    const r = calcLevies(1000, 3000, 30, [{ id: "a", name: "א", rateLand: "10", rateBuilt: "20", rateUnit: "" }, { id: "b", name: "ב", rateLand: "", rateBuilt: "", rateUnit: "1000" }]);
+    expect(r.total).toBe(10000 + 60000 + 30000);
+    expect(r.filled).toBe(2);
+  });
+  it("ממ\"ד: 3.2×2.9×2.5 עומד, קיר 25 עם חלון לא עומד", () => {
+    const r = calcMamad({ l: "3.2", w: "2.9", h: "2.5", wall: "25", window: true })!;
+    expect(r.area).toBeCloseTo(9.28, 2);
+    expect(r.checks[0].status).toBe("ok");
+    expect(r.checks[1].status).toBe("ok");
+    expect(r.checks[3].status).toBe("bad");
+  });
+  it("כבאות: 3.8 מ' בהקלה, 31 מ' רב קומות", () => {
+    const r = calcFireAccess({ height: "31", road: "3.8", stagingL: "12", stagingW: "6", toFacade: "7", hydrant: "25" });
+    expect(r.category?.level).toBe(2);
+    expect(r.checks.find((c) => c.id === "road")?.status).toBe("warn");
+    expect(r.checks.find((c) => c.id === "staging")?.status).toBe("ok");
+    expect(r.checks.find((c) => c.id === "facade")?.status).toBe("bad");
+  });
+});

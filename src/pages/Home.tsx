@@ -3,10 +3,11 @@ import { useState } from "react";
 import { allChecklistKeys, chapters, directory, permitTracks, source, tools } from "../data/permitData";
 import { calcDrainage, calcFee, calcGreen, calcParking, calcWaste, calcWater } from "../logic/calculators";
 import { href, navigate } from "../state/router";
-import { useChecks, useProject } from "../state/store";
+import { useChecks, useK, useProject } from "../state/store";
 import { Progress } from "../components/ui";
 import { IconBox, chapterIcon, toolIcon } from "../components/icons";
 import { CountUp, statusOf } from "../components/viz";
+import { landUse, landUseSource, landUses } from "../data/landuse";
 
 const totalReqs = chapters.reduce((s, c) => s + allChecklistKeys(c).length, 0);
 
@@ -76,17 +77,18 @@ export default function Home() {
   const progress = useChapterProgress();
   const checks = useChecks();
   const p = useProject();
+  const k = useK();
   const reduce = useReducedMotion();
   const doneAll = Object.values(checks).filter(Boolean).length;
   const maxDays = Math.max(...permitTracks.map((t) => t.days));
 
   const preview: Record<string, string | null> = {
-    parking: (() => { const r = calcParking(p.parking, p.standard); return r.hasInput ? `${r.total} חניות` : null; })(),
-    drainage: (() => { const r = calcDrainage(p.plot, p.footprint, p.green); return r ? `${r.peakLps.toFixed(1)} ל'/ש'` : null; })(),
-    green: (() => { const r = calcGreen(p.plot, p.footprint, p.units); return r ? `${r.trees} עצים` : null; })(),
-    waste: (() => { const r = calcWaste(p.units, p.floors); return r ? `${r.totalM3.toFixed(2)} קוב` : null; })(),
-    water: (() => { const r = calcWater(p.plot, p.footprint, p.irrigation, p.water); return r ? `${Math.round(r.total).toLocaleString("he-IL")} מ"ק` : null; })(),
-    fee: (() => { const r = calcFee(p.gfa); return r.area ? `₪${Math.round(r.fee).toLocaleString("he-IL")}` : null; })(),
+    parking: (() => { const r = calcParking(p.parking, p.standard, k); return r.hasInput ? `${r.total} חניות` : null; })(),
+    drainage: (() => { const r = calcDrainage(p.plot, p.footprint, p.green, k); return r ? `${r.peakLps.toFixed(1)} ל'/ש'` : null; })(),
+    green: (() => { const r = calcGreen(p.plot, p.footprint, p.units, k); return r ? `${r.trees} עצים` : null; })(),
+    waste: (() => { const r = calcWaste(p.units, p.floors, k); return r ? `${r.totalM3.toFixed(2)} קוב` : null; })(),
+    water: (() => { const r = calcWater(p.plot, p.footprint, p.irrigation, p.water, k); return r ? `${Math.round(r.total).toLocaleString("he-IL")} מ"ק` : null; })(),
+    fee: (() => { const r = calcFee(p.gfa, k); return r.area ? `₪${Math.round(r.fee).toLocaleString("he-IL")}` : null; })(),
   };
 
   return (
@@ -205,6 +207,34 @@ export default function Home() {
             </a>
           ))}
         </div>
+      </section>
+
+      {/* מקרא צבעים */}
+      <section className="stack" style={{ gap: 16 }} data-testid="lu-legend">
+        <div className="spread">
+          <h2 className="h2">מקרא צבעים</h2>
+          <span className="label">צבעי האגפים לפי מקרא ייעודי הקרקע (מבא"ת)</span>
+        </div>
+        <div className="lu-legend">
+          {chapters.map((c, i) => {
+            const lu = landUse(c.tone);
+            return (
+              <a key={c.id} className="lu-chip" href={href({ name: "chapter", id: c.id })} style={{ textDecoration: "none" }}>
+                <i style={{ background: lu.hex }} className={lu.hatched ? "hatched" : ""} />
+                <b className="mono">{String(i + 1).padStart(2, "0")}</b> {c.short} <span className="muted">· {lu.name}</span>
+              </a>
+            );
+          })}
+        </div>
+        <details className="kpanel">
+          <summary><b>המקרא המלא</b><span className="muted">{landUseSource.status}</span></summary>
+          <div className="doc-body">
+            <div className="lu-legend">
+              {landUses.map((l) => <span key={l.key} className="lu-chip"><i style={{ background: l.hex }} className={l.hatched ? "hatched" : ""} />{l.name} <span className="muted mono">{l.code || ""} {l.hex}</span></span>)}
+            </div>
+            <p className="muted" style={{ fontSize: 12 }}>מקור: <a href={landUseSource.url} target="_blank" rel="noreferrer">{landUseSource.label}</a>.</p>
+          </div>
+        </details>
       </section>
 
       {/* כלים */}

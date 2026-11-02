@@ -395,6 +395,70 @@ const EnvSection = () => (
   </Svg>
 );
 
+
+/* ---------------- כבאות ---------------- */
+const FirePlan = () => (
+  <Svg>
+    <rect x="0" y="236" width="400" height="44" className="street" />
+    <Dim x1={390} y1={236} x2={390} y2={280} label="4 מ'" />
+    <rect x="70" y="30" width="230" height="120" className="wall-fill" />
+    <rect x="150" y="146" width="40" height="7" className="window" /><T x={170} y={142} s={8}>חלון חילוץ</T>
+    <rect x="110" y="180" width="140" height="50" className="staging" /><T x={180} y={209} s={10}>רחבה 6×12 מ'</T>
+    <Dim x1={60} y1={150} x2={60} y2={180} label="≤6 מ'" />
+    <circle cx="330" cy="200" r="8" className="hydrant" /><T x={330} y={222} s={8}>ברז</T>
+    <path d="M322 196 L290 150" className="flow" strokeDasharray="4 3" />
+    <rect x="290" y="146" width="16" height="6" className="gate" /><T x={298} y={140} s={8}>כניסה</T>
+    <circle cx="20" cy="258" r="6" className="hydrant" /><path d="M26 258 H120" className="thin dashed" /><T x={70} y={252} s={8}>≤120 מ'</T>
+    <rect x="120" y="190" width="70" height="30" className="truck" rx="2" />
+    <C n={1} x={360} y={258} /><C n={2} x={250} y={190} /><C n={3} x={40} y={165} /><C n={4} x={350} y={180} /><C n={5} x={70} y={270} /><C n={6} x={110} y={235} />
+  </Svg>
+);
+
+/* ---------------- ממ"ד ---------------- */
+const MamadPlan = () => (
+  <Svg>
+    <rect x="80" y="40" width="240" height="200" className="wall-fill" />
+    <rect x="105" y="65" width="190" height="150" className="room" />
+    <T x={200} y={135} s={13}>9 מ"ר נטו</T><T x={200} y={152} s={9}>לפחות</T>
+    <rect x="170" y="36" width="60" height="30" className="window" /><T x={200} y={30} s={8}>חלון הדף</T>
+    <rect x="250" y="212" width="40" height="30" className="door" /><T x={270} y={256} s={8}>דלת הדף</T>
+    <rect x="108" y="68" width="22" height="14" className="filter" /><T x={140} y={79} a="start" s={8}>סינון</T>
+    <Dim x1={105} y1={225} x2={295} y2={225} label="אורך נטו" />
+    <Dim x1={60} y1={65} x2={60} y2={215} label="רוחב" />
+    <Dim x1={300} y1={128} x2={322} y2={128} label="25 ס״מ" />
+    <C n={1} x={200} y={175} /><C n={3} x={335} y={100} /><C n={5} x={245} y={30} /><C n={6} x={300} y={250} /><C n={7} x={120} y={100} />
+  </Svg>
+);
+
+const MamadSection = () => (
+  <Svg h={260}>
+    <rect x="80" y="30" width="240" height="210" className="wall-fill" />
+    <rect x="105" y="50" width="190" height="170" className="room" />
+    <Dim x1={315} y1={50} x2={315} y2={220} label="גובה" />
+    <T x={200} y={135} s={13}>22.5 מ"ק לפחות</T>
+    <rect x="105" y="30" width="190" height="20" className="slab-fill" /><T x={200} y={44} s={8} >תקרה</T>
+    <C n={2} x={200} y={160} /><C n={4} x={345} y={135} />
+  </Svg>
+);
+
+/* ---------------- יובלים ---------------- */
+const Yuvallim = () => (
+  <Svg h={230}>
+    {["חוות דעת ומפת GIS", "חיבור זמני", "מד לבנייה", "חשבון לקוח", "מז\"ח", "דמי הקמה וגמר"].map((t, i) => {
+      const x = 10 + (i % 3) * 130, y = i < 3 ? 30 : 140;
+      return (
+        <g key={t}>
+          <rect x={x} y={y} width={115} height={50} className={`box ${i === 4 ? "tone" : ""}`} />
+          <T x={x + 57} y={y + 30} s={10}>{t}</T>
+          {i % 3 < 2 && <line x1={x + 115} y1={y + 25} x2={x + 128} y2={y + 25} className="flow" markerEnd="url(#arr)" />}
+          <C n={i + 1} x={x + 8} y={y - 2} />
+        </g>
+      );
+    })}
+    <path d="M330 80 V110 H67 V138" className="flow" fill="none" markerEnd="url(#arr)" />
+  </Svg>
+);
+
 export interface Illus {
   title: string;
   views: { id: "plan" | "section" | "axo"; label: string; Draw: () => JSX.Element }[];
@@ -419,4 +483,7 @@ export const illustrations: Record<string, Illus> = {
   waste: { title: "אצירת אשפה ופינוי", views: [plan(WastePlan), section(WasteSection), axo(WastePlan)] },
   water: { title: "נספח סניטרי", views: [plan(WaterPlan), section(WaterSection)] },
   environment: { title: "סביבה: קרקע, אסבסט, אקוסטיקה ונגר", views: [section(EnvSection)] },
+  fire: { title: "גישה לרכב כיבוי", views: [plan(FirePlan), axo(FirePlan)] },
+  mamad: { title: "מרחב מוגן דירתי", views: [plan(MamadPlan), section(MamadSection), axo(MamadPlan)] },
+  yuvallim: { title: "תהליך מול יובלים", views: [plan(Yuvallim)] },
 };

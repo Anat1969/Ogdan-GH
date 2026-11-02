@@ -344,7 +344,7 @@ td.num { font-family: var(--mono); }
 .slab .face { position: absolute; backface-visibility: visible; }
 .slab .top { inset: 0; transform: translateZ(18px); background: var(--sheet); border: 1px solid var(--g4); overflow: hidden; }
 .slab .top i { position: absolute; inset-block: 0; left: 0; background: var(--st); opacity: .9; transition: width .6s var(--ease); }
-.slab .top span { position: absolute; right: 10px; bottom: 6px; font-family: var(--mono); font-size: 16px; color: var(--ink); font-weight: 600; }
+.slab .top span { position: absolute; right: 10px; bottom: 6px; font-family: var(--mono); font-size: 16px; color: var(--ink); font-weight: 700; }
 .slab .front { left: 0; top: 100%; width: 100%; height: 18px; transform-origin: top; transform: translateZ(18px) rotateX(-90deg); background: var(--g4); }
 .slab .back  { left: 0; bottom: 100%; width: 100%; height: 18px; transform-origin: bottom; transform: translateZ(18px) rotateX(90deg); background: var(--g3); }
 .slab .left  { right: 100%; top: 0; width: 18px; height: 100%; transform-origin: right; transform: translateZ(18px) rotateY(-90deg); background: var(--g3); }
@@ -482,13 +482,13 @@ body { font-size: clamp(15px, 0.35vw + 13.6px, 17px); }
 .input { border-color: var(--gray-mid); }
 
 /* מספור */
-.num-badge { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 5px; font-size: 11px; font-weight: 600; background: var(--tone, var(--ink)); color: #fff; flex: 0 0 auto; }
+.num-badge { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 5px; font-size: 11px; font-weight: 700; background: var(--tone, var(--ink)); color: var(--tone-fg, var(--sheet)); flex: 0 0 auto; box-shadow: inset 0 0 0 1px rgba(0,0,0,.25); }
 .navlink { font-variant-numeric: tabular-nums; }
 
 /* ראש עמוד */
 .page-head { margin-bottom: var(--s4); }
 .page-head h1 { white-space: pre-wrap; }
-.page-head .iconbox { border-color: var(--tone, var(--ink)); color: var(--tone, var(--ink)); border-width: 2px; }
+.page-head .iconbox { border-color: var(--ink); background: var(--tone, var(--sheet)); color: var(--tone-fg, var(--ink)); border-width: 2px; }
 .head-meta { display: flex; gap: var(--s4); flex-wrap: wrap; align-items: end; margin-top: var(--s2); }
 .toc { display: flex; flex-wrap: wrap; gap: 6px; flex: 3 1 400px; }
 .toc-i { font-size: 12px; padding: 3px 8px; background: var(--paper); border: 1px solid var(--gray-light); color: var(--gray-dark); }
@@ -645,8 +645,8 @@ body { font-size: clamp(15px, 0.35vw + 13.6px, 17px); }
 .drawing .wave { stroke: var(--ash-orange); stroke-width: 2; fill: none; }
 .drawing .dim line { stroke: var(--gray-dark); stroke-width: .8; }
 .drawing .dim text { fill: var(--ink); font-size: 9px; font-family: var(--mono); }
-.callout circle { fill: var(--tone, var(--ink)); stroke: #fff; stroke-width: 1.5; transition: r .2s; }
-.callout text { fill: #fff; font-size: 11px; font-weight: 700; font-family: var(--mono); }
+.callout circle { fill: var(--tone, var(--ink)); stroke: var(--ink); stroke-width: 1.5; transition: r .2s; }
+.callout text { fill: var(--tone-fg, #fff); font-size: 11px; font-weight: 700; font-family: var(--mono); }
 .callout.dim { opacity: .35; }
 .callout.on circle:not(.callout-pulse) { fill: var(--ink); }
 .callout-pulse { fill: color-mix(in srgb, var(--tone) 35%, transparent) !important; stroke: none !important; animation: pulse 1.2s ease-out infinite; transform-origin: center; transform-box: fill-box; }
@@ -671,8 +671,8 @@ body { font-size: clamp(15px, 0.35vw + 13.6px, 17px); }
 .slab .top { border-color: var(--tone); background: color-mix(in srgb, var(--tone) 12%, var(--sheet)); }
 .legend a { border-inline-start: 4px solid var(--tone); }
 .legend a .mono:first-child { color: var(--tone); font-weight: 600; }
-.card-link .iconbox { color: var(--tone, var(--ink)); border-color: var(--tone, var(--ink)); }
-.card-link:hover .iconbox { background: var(--tone, var(--ink)); color: #fff; }
+.card-link .iconbox { color: var(--ink); border-color: var(--ink); background: var(--tone, var(--sheet)); color: var(--tone-fg, var(--ink)); }
+.card-link:hover .iconbox { background: var(--tone, var(--ink)); color: var(--tone-fg, #fff); }
 .tick { border-inline-start: 4px solid var(--tone); }
 .metric .v { color: var(--ink); }
 .shade-1 { background: var(--ash-green); } .shade-2 { background: var(--gray-mid); } .shade-3 { background: var(--ash-blue); } .shade-0 { background: var(--gray-light); }
@@ -721,3 +721,31 @@ body { font-size: clamp(15px, 0.35vw + 13.6px, 17px); }
   .calc-steps { break-inside: avoid; }
   .calc-steps ol { display: grid !important; }
 }
+
+/* מקרא ייעודי קרקע */
+.lu-chip { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; padding: 3px 8px 3px 3px; border: 1px solid var(--gray-light); background: var(--sheet); }
+.lu-chip i { width: 22px; height: 14px; display: inline-block; border: 1px solid rgba(0,0,0,.35); }
+.lu-chip i.hatched { background-image: repeating-linear-gradient(45deg, rgba(0,0,0,.35) 0 1.5px, transparent 1.5px 5px) !important; }
+.lu-legend { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 6px; }
+.frame-num { background: var(--tone, transparent); color: var(--tone-fg, var(--ink)); border-color: var(--ink); }
+.toc-i .mono { color: var(--ink); background: var(--tone); color: var(--tone-fg); padding: 0 4px; }
+.legend a .mono:first-child { color: var(--ink); }
+
+.drawing .staging { fill: color-mix(in srgb, #FF00C5 14%, var(--sheet)); stroke: #FF00C5; stroke-width: 2; stroke-dasharray: 6 3; }
+.drawing .hydrant { fill: #e5482b; stroke: var(--ink); stroke-width: 1.5; }
+.drawing .door { fill: var(--gray-mid); stroke: var(--ink); }
+.drawing .filter { fill: var(--ash-sky); stroke: var(--ink); }
+.drawing .slab-fill { fill: var(--gray-mid); }
+.kpanel { border: 1px solid var(--gray-light); background: var(--paper); }
+.kpanel > summary { cursor: pointer; padding: 10px 14px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: center; list-style: none; font-size: 14px; }
+.kpanel > summary::-webkit-details-marker { display: none; }
+.kpanel[open] > summary { border-bottom: 1px solid var(--gray-light); }
+.kpanel .table-wrap { border: 0; }
+.ktable td { vertical-align: top; }
+.ktable tr.changed td { background: color-mix(in srgb, var(--warn) 10%, transparent); }
+.doc-body { padding: 12px 14px; display: grid; gap: 12px; }
+.units { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 6px; margin: 0; }
+.units > div { display: flex; gap: 8px; font-size: 13px; padding: 6px 8px; background: var(--sheet); border: 1px solid var(--gray-light); }
+.units dt { font-weight: 600; min-width: 4em; }
+.units dd { margin: 0; color: var(--gray-dark); }
+.sources { font-size: 14px; display: grid; gap: 6px; }

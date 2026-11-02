@@ -9,6 +9,8 @@ import { ContactList } from "./Contacts";
 import NotFound from "./NotFound";
 import { Icon, chapterIcon } from "../components/icons";
 import { Viewer } from "../components/illus/Viewer";
+import { Light } from "../components/viz";
+import { landUse, landUseSource } from "../data/landuse";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
@@ -151,6 +153,20 @@ function Body({ chapter, block, setActive }: { chapter: Ch; block: Block; setAct
       const T = toolComponents[block.tool];
       return <T />;
     }
+    case "sources":
+      return (
+        <ol className="numlist">
+          {block.items.map((s, i) => (
+            <li key={s.title} onMouseEnter={() => setActive(i + 1)} onMouseLeave={() => setActive(null)}>
+              <span className="num-badge mono">{i + 1}</span>
+              <span>
+                {s.url ? <a href={s.url} target="_blank" rel="noreferrer">{s.title}</a> : s.title}
+                <span style={{ display: "block", fontSize: 12 }}><Light status={s.verified ? "ok" : "idle"}>{s.verified ? "מאומת" : "לאימות"}</Light>{s.note && <span className="muted"> · {s.note}</span>}</span>
+              </span>
+            </li>
+          ))}
+        </ol>
+      );
   }
 }
 
@@ -218,6 +234,12 @@ export default function Chapter({ id }: { id: string }) {
         lead={chapter.description}
         icon={chapterIcon[chapter.id]}
       >
+        <div className="row" style={{ gap: 8 }}>
+          <span className="lu-chip" title={`${landUseSource.label}. ${landUseSource.status}`}>
+            <i style={{ background: landUse(chapter.tone).hex }} className={landUse(chapter.tone).hatched ? "hatched" : ""} />
+            צבע האגף לפי מקרא מבא"ת: {landUse(chapter.tone).name}{landUse(chapter.tone).code ? ` (${landUse(chapter.tone).code})` : ""}
+          </span>
+        </div>
         <div className="head-meta">
           {keys.length > 0 && (
             <div style={{ display: "grid", gap: 6, minWidth: 220, flex: "1 1 220px", maxWidth: 420 }}>
