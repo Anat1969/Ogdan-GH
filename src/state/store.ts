@@ -32,9 +32,10 @@ export interface LevyRow { id: string; name: string; basis: string; rateLand: st
 
 const programRow = (id: string, name: string): ProgramRow => ({ id, name, cohortPct: "", participation: "", perUnit: "", plotPerUnit: "", builtPerUnit: "" });
 export const defaultProgram = () => ({
-  household: "",
+  // 3.5 נפשות: ערך שאשדוד הניחה בפרוגרמה לרובע ה' (2016), לפי הנחיות הממשלה. לאימות מול הנחיות אשדוד לפרוגרמה, דצמבר 2025, פרק הנחות יסוד.
+  household: "3.5",
   spaPerCapita: "",
-  source: "",
+  source: "גודל משק בית 3.5: פרוגרמת רובע ה', אשדוד 2016 (מקור משני, לאימות מול הנחיות אשדוד דצמבר 2025). שאר הנורמות: להזין מהמסמך.",
   rows: [
     programRow("daycare", "מעונות יום (0 עד 3)"),
     programRow("kinder", "גני ילדים (3 עד 6)"),
