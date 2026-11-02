@@ -61,7 +61,9 @@ describe("ניקוז", () => {
     const r = calcDrainage(1000, 400, 150)!;
     expect(r.paved).toBe(450);
     expect(r.weightedC).toBeCloseTo((380 + 382.5 + 30) / 1000, 6);
-    expect(r.peakLps).toBeCloseTo(((r.weightedC * 120 * 1) / 360) * 1000, 6);
+    // 1,000 מ"ר = 0.1 הקטר
+    expect(r.peakLps).toBeCloseTo(((r.weightedC * 120 * 0.1) / 360) * 1000, 6);
+    expect(r.peakLps).toBeCloseTo(26.42, 2);
     expect(r.meetsInfiltration).toBe(true);
     expect(r.pitM3).toBeCloseTo(25.5, 6);
   });

@@ -4,6 +4,8 @@ import { calcDrainage, calcFee, calcGreen, calcParking, calcWaste, calcWater } f
 import { href } from "../state/router";
 import { exampleProject, projectStore, updateProject, useChecks, useProject } from "../state/store";
 import { Metric, NumField, PageHead, Progress, Seg, Sheet, Stamp } from "../components/ui";
+import { Icon } from "../components/icons";
+import { Ring } from "../components/viz";
 
 const fmt = (n: number, d = 0) => n.toLocaleString("he-IL", { maximumFractionDigits: d });
 
@@ -43,9 +45,9 @@ export default function Project() {
 
   return (
     <div>
-      <PageHead crumbs={[{ label: "בית", route: { name: "home" } }, { label: "תיק הבקשה" }]} label="נשמר אוטומטית בדפדפן" title="תיק הבקשה" lead="נתוני הפרויקט מוזנים כאן פעם אחת ומזינים את כל המחשבונים. הדוח למטה מסכם כמויות, חוסרים ודרישות פתוחות, ומוכן להדפסה.">
+      <PageHead crumbs={[{ label: "בית", route: { name: "home" } }, { label: "תיק הבקשה" }]} label="נשמר אוטומטית בדפדפן" title="תיק הבקשה" icon="folder" lead="נתוני הפרויקט מוזנים כאן פעם אחת ומזינים את כל המחשבונים. הדוח למטה מסכם כמויות, חוסרים ודרישות פתוחות, ומוכן להדפסה.">
         <div className="row no-print" style={{ marginTop: 8 }}>
-          <button type="button" className="btn primary" onClick={() => window.print()} data-testid="print">הדפסת הדוח</button>
+          <button type="button" className="btn primary" onClick={() => window.print()} data-testid="print"><Icon name="print" size={16} />הדפסת הדוח</button>
           {empty && <button type="button" className="btn" onClick={() => projectStore.set(exampleProject())} data-testid="load-example">טעינת פרויקט לדוגמה</button>}
         </div>
       </PageHead>
@@ -100,6 +102,32 @@ export default function Project() {
               {flags.map((f) => <Stamp key={f.title} kind={f.kind} seal={f.seal} title={f.title}>{f.body}</Stamp>)}
             </div>
           )}
+
+          <div className="viz-grid" style={{ marginBottom: 24 }}>
+            <div>
+              <h3 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>מוכנות לפי פרק</h3>
+              <div className="rings">
+                {per.filter((x) => x.keys.length).map(({ c, keys, done: d }) => (
+                  <a key={c.id} href={href({ name: "chapter", id: c.id })} style={{ textDecoration: "none" }}>
+                    <Ring value={d / keys.length} label={c.short} sub={`${d}/${keys.length}`} size={84} />
+                  </a>
+                ))}
+              </div>
+            </div>
+            <div>
+              <h3 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>זמני טיפול לפי מסלול</h3>
+              <div className="gantt" aria-label="ציר זמן מסלולי הגשה">
+                {permitTracks.map((t) => (
+                  <div key={t.id} className={`gantt-row ${t.id === p.track ? "mine" : ""}`}>
+                    <span>{t.name}</span>
+                    <span className="gantt-bar"><i style={{ width: `${(t.days / 90) * 100}%` }} /></span>
+                    <span className="mono">{t.days} ימים</span>
+                  </div>
+                ))}
+              </div>
+              <p className="muted" style={{ fontSize: 13, marginTop: 10 }}>המסלול שנבחר מסומן בשחור. ניתן להחליף בפרטי הפרויקט.</p>
+            </div>
+          </div>
 
           <h3 style={{ fontSize: 18, fontWeight: 500, marginBottom: 8 }}>כמויות מהמחשבונים</h3>
           <div className="table-wrap" style={{ marginBottom: 24 }}>

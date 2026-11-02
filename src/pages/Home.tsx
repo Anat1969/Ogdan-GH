@@ -5,6 +5,8 @@ import { calcDrainage, calcFee, calcGreen, calcParking, calcWaste, calcWater } f
 import { href, navigate } from "../state/router";
 import { useChecks, useProject } from "../state/store";
 import { Progress } from "../components/ui";
+import { IconBox, chapterIcon, toolIcon } from "../components/icons";
+import { CountUp, statusOf } from "../components/viz";
 
 const totalReqs = chapters.reduce((s, c) => s + allChecklistKeys(c).length, 0);
 
@@ -46,7 +48,7 @@ function Tower({ active, setActive, progress }: { active: string | null; setActi
           return (
             <motion.div
               key={c.id}
-              className={`slab tone-${c.tone} ${lifted ? "on" : ""} ${active && !lifted ? "dim" : ""}`}
+              className={`slab st-${progress[c.id].ratio > 0 ? statusOf(progress[c.id].ratio) : "idle"} ${lifted ? "on" : ""} ${active && !lifted ? "dim" : ""}`}
               initial={reduce ? false : { z: 400, opacity: 0 }}
               animate={{ z: i * 26 + (lifted ? 18 : 0), opacity: 1 }}
               transition={{ delay: reduce ? 0 : 0.15 + i * 0.07, type: "spring", stiffness: 120, damping: 16 }}
@@ -106,6 +108,11 @@ export default function Home() {
             <a className="btn primary" href={href({ name: "project" })} data-testid="cta-project">פתיחת תיק בקשה</a>
             <a className="btn" href={href({ name: "chapter", id: "licensing" })}>קריאת האוגדן מהפרק הראשון</a>
           </div>
+          <div className="hero-stats">
+            {[[chapters.length, "פרקים"], [totalReqs, "דרישות"], [directory.length, "אנשי קשר"], [tools.length, "מחשבונים"]].map(([n, l]) => (
+              <div key={l as string}><b className="mono"><CountUp value={n as number} /></b><span>{l}</span></div>
+            ))}
+          </div>
           <div className="hero-meter">
             <div className="spread" style={{ fontSize: 13 }}>
               <span className="muted">התקדמות התיק שלכם</span>
@@ -121,7 +128,7 @@ export default function Home() {
               const i = chapters.indexOf(c);
               return (
                 <li key={c.id}>
-                  <a href={href({ name: "chapter", id: c.id })} className={`tone-${c.tone} ${active === c.id ? "on" : ""}`} onMouseEnter={() => setActive(c.id)} onMouseLeave={() => setActive(null)} onFocus={() => setActive(c.id)} onBlur={() => setActive(null)}>
+                  <a href={href({ name: "chapter", id: c.id })} className={`st-${statusOf(progress[c.id].ratio)} ${active === c.id ? "on" : ""}`} onMouseEnter={() => setActive(c.id)} onMouseLeave={() => setActive(null)} onFocus={() => setActive(c.id)} onBlur={() => setActive(null)}>
                     <span className="mono">{String(i + 1).padStart(2, "0")}</span>
                     <span>{c.short}</span>
                     <span className="mono muted">{progress[c.id].total ? `${progress[c.id].done}/${progress[c.id].total}` : "מידע"}</span>
@@ -180,7 +187,8 @@ export default function Home() {
         <div className="grid g3">
           {chapters.map((c, i) => (
             <a key={c.id} className={`card-link tone-${c.tone} tick`} href={href({ name: "chapter", id: c.id })} data-testid={`chapter-card-${c.id}`}>
-              <span className="label" style={{ color: "var(--tone)" }}>פרק {String(i + 1).padStart(2, "0")}</span>
+              <IconBox name={chapterIcon[c.id]} />
+              <span className="label" style={{ display: "block" }}>פרק {String(i + 1).padStart(2, "0")}</span>
               <span className="go" aria-hidden="true">←</span>
               <h3>{c.title}</h3>
               <p>{c.description}</p>
@@ -210,7 +218,8 @@ export default function Home() {
             const c = chapters.find((x) => x.id === t.chapter)!;
             return (
               <a key={t.id} className={`card-link tone-${c.tone}`} href={href({ name: "tool", id: t.id })}>
-                <span className="label">{c.short}</span>
+                <IconBox name={toolIcon[t.id]} />
+                <span className="label" style={{ display: "block" }}>{c.short}</span>
                 <span className="go" aria-hidden="true">←</span>
                 <h3>{t.title}</h3>
                 <p>{t.purpose}</p>

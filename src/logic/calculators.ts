@@ -174,8 +174,9 @@ export function calcDrainage(plotIn: string | number, buildingIn: string | numbe
   const effGreen = green * cGreen;
   const effective = effRoof + effPaved + effGreen;
   const weightedC = effective / plot;
-  const dunam = plot / 1000;
-  const peakM3s = (weightedC * intensity * dunam) / 360;
+  // נוסחת הרציונל: Q[מ"ק/ש'] = C × I[מ"מ/שעה] × A[הקטר] / 360. (בגרסה 1 הוצב A בדונם, ולכן התוצאה הייתה גבוהה פי 10.)
+  const hectare = plot / 10000;
+  const peakM3s = (weightedC * intensity * hectare) / 360;
   const peakLps = peakM3s * 1000;
   const rainMM = intensity * duration;
   const eventM3 = (effective * rainMM) / 1000;
@@ -188,7 +189,7 @@ export function calcDrainage(plotIn: string | number, buildingIn: string | numbe
   const steps: Step[] = [
     { label: "שטח מרוצף", expr: `${f(plot)} − ${f(building)} − ${f(green)} = ${f(paved)} מ"ר` },
     { label: "מקדם נגר משוקלל", expr: `(${f(building)}×0.95 + ${f(paved)}×0.85 + ${f(green)}×0.20) ÷ ${f(plot)} = ${f(weightedC, 2)}` },
-    { label: "ספיקת שיא", expr: `Q = ${f(weightedC, 2)} × 120 × ${f(dunam, 2)} ÷ 360 = ${f(peakM3s, 4)} קוב/ש' (${f(peakLps, 1)} ל'/ש')` },
+    { label: "ספיקת שיא", expr: `Q = ${f(weightedC, 2)} × 120 × ${f(hectare, 3)} הקטר ÷ 360 = ${f(peakM3s, 4)} קוב/ש' (${f(peakLps, 1)} ל'/ש')` },
     { label: "נפח נגר לאירוע", expr: `${f(effective)} מ"ר × 30 מ"מ = ${f(eventM3, 1)} קוב` },
     { label: "נגר שנתי", expr: `${f(effective)} מ"ר × 0.4 מ' = ${f(annualM3)} קוב/שנה` },
     { label: "בור חלחול", expr: `${f(impervious)} מ"ר אטום × 30 מ"מ = ${f(pitM3, 1)} קוב` },

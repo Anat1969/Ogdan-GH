@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { chapters, directory, type ContactPerson } from "../data/permitData";
 import { href } from "../state/router";
 import { PageHead, Sheet, copyText, useToast } from "../components/ui";
+import { Icon } from "../components/icons";
 
 export function ContactList({ people, compact }: { people: (ContactPerson & { department?: string; chapterId?: string })[]; compact?: boolean }) {
   const toast = useToast();
@@ -14,10 +15,10 @@ export function ContactList({ people, compact }: { people: (ContactPerson & { de
             <div className="role">{p.role}{p.department && !compact ? ` · ${p.department}` : ""}</div>
           </div>
           <div className="acts">
-            <a className="btn sm" href={`tel:${p.phone.replace(/-/g, "")}`} aria-label={`חיוג ל${p.name}`}><span className="ltr mono">{p.phone}</span></a>
+            <a className="btn sm" href={`tel:${p.phone.replace(/-/g, "")}`} aria-label={`חיוג ל${p.name}`}><Icon name="phone" size={15} /><span className="ltr mono">{p.phone}</span></a>
             {p.email && (
               <button type="button" className="btn sm ghost" onClick={async () => toast((await copyText(p.email)) ? `הועתק: ${p.email}` : "ההעתקה נכשלה")} aria-label={`העתקת הדוא"ל של ${p.name}`}>
-                דוא"ל
+                <Icon name="mail" size={15} />דוא"ל
               </button>
             )}
           </div>
@@ -37,7 +38,7 @@ export default function Contacts() {
   const withContacts = chapters.filter((c) => c.contacts.length);
   return (
     <div>
-      <PageHead crumbs={[{ label: "בית", route: { name: "home" } }, { label: "ספר טלפונים" }]} label={`${directory.length} אנשי קשר`} title="ספר טלפונים" lead="כל אנשי הקשר מכל פרקי האוגדן. לחיצה על מספר מחייגת, לחיצה על דוא״ל מעתיקה את הכתובת." />
+      <PageHead crumbs={[{ label: "בית", route: { name: "home" } }, { label: "ספר טלפונים" }]} label={`${directory.length} אנשי קשר`} title="ספר טלפונים" icon="people" lead="כל אנשי הקשר מכל פרקי האוגדן. לחיצה על מספר מחייגת, לחיצה על דוא״ל מעתיקה את הכתובת." />
       <div className="stack">
         <div className="grid g2" style={{ alignItems: "end" }}>
           <label className="field">

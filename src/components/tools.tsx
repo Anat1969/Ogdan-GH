@@ -6,6 +6,7 @@ import {
 } from "../logic/calculators";
 import { uid, updateProject, useProject } from "../state/store";
 import { Metric, NumField, Seg, Stamp, Steps } from "./ui";
+import { SitePlan, StackBar, Tank, Waffle } from "./viz";
 
 const fmt = (n: number, d = 0) => n.toLocaleString("he-IL", { maximumFractionDigits: d });
 
@@ -67,6 +68,19 @@ export function ParkingTool() {
           <Metric v={r.disabled} k="חניות נכים" n="5%, מינימום 1" tone="moss" />
           <Metric v={r.ev} k="עמדות טעינה" n="20% מהסך" tone="amber" />
         </div>
+        <Waffle
+          label="פריסת מקומות החניה"
+          perSquare={r.grand > 300 ? 5 : 1}
+          groups={[
+            { label: "חניה רגילה", count: Math.max(0, r.total - r.disabled - r.ev), kind: "solid" },
+            { label: "נכים", count: r.disabled, kind: "ring" },
+            { label: "עם עמדת טעינה", count: r.ev, kind: "dot" },
+            { label: "רכב תפעולי", count: r.operational, kind: "mid" },
+          ]}
+        />
+        {r.rows.filter((x) => x.parking > 0).length > 1 && (
+          <StackBar label="חלוקת החניות לפי שימוש" unit="חניות" segments={r.rows.filter((x) => x.parking > 0).map((x, i) => ({ label: x.config.label, value: x.parking, shade: ([4, 2, 3, 1, 0] as const)[i % 5] }))} />
+        )}
         <div className="table-wrap">
           <table>
             <thead><tr><th>ייעוד</th><th>יחידה</th><th>מקדם, {p.standard === "ashdod" ? "אשדוד" : "ארצי"}</th><th>תפעולי</th></tr></thead>
@@ -100,6 +114,7 @@ export function FeeTool() {
           <Metric hero v={`₪${fmt(r.fee)}`} k="אגרת בנייה משוערת" />
           <Metric v={`₪${fmt(r.deposit)}`} k="פיקדון" n="20% מסך האגרה" tone="clay" />
         </div>
+        <StackBar label="אגרה ופיקדון" unit="₪" segments={[{ label: "אגרת בנייה", value: r.fee, shade: 4 }, { label: "פיקדון", value: r.deposit, shade: 2 }]} />
         <Steps steps={r.steps} limits="אומדן בלבד. הסכום המדויק ייקבע על ידי מחלקת האגרות לפי התעריפים העדכניים." />
       </Reveal>
     </div>
@@ -124,6 +139,11 @@ export function WasteTool() {
               <Metric hero v={fmt(r.totalM3, 2)} u="קוב" k="נפח אצירה ל-2.5 ימים" />
               <Metric v={fmt(r.wetM3, 2)} u="קוב" k="רטובה, 40%" tone="moss" />
               <Metric v={fmt(r.dryM3, 2)} u="קוב" k="יבשה, 60%" tone="tide" />
+            </div>
+            <div className="tanks">
+              <Tank label="רטובה" unit="קוב" fill={r.wetM3} capacity={r.compactors ? r.compactors.wet : r.tamunim!.wet * 5} />
+              <Tank label="יבשה" unit="קוב" fill={r.dryM3} capacity={r.compactors ? r.compactors.dry : r.tamunim!.dry * 5} />
+              <p className="muted" style={{ fontSize: 13, maxWidth: "34ch" }}>מילוי המכלים מראה את נפח האצירה ל-2.5 ימים מול הקיבולת שנבחרה{r.compactors ? " (דחסניות)" : " (טמונים של 5 קוב)"}. מעל 100% המכל אדום.</p>
             </div>
             {r.dual ? (
               <Stamp kind="warn" seal="כפולה" title="נדרשת מערכת כפולה">{r.dualReason}: חובה 2 צנרות שוט (רטובה ויבשה) ו-2 דחסניות נפרדות.</Stamp>
@@ -180,6 +200,19 @@ export function DrainageTool() {
               <Metric v={fmt(r.eventM3, 1)} u="קוב" k="נפח נגר לאירוע" tone="tide" />
               <Metric v={fmt(r.annualM3)} u="קוב" k="נגר שנתי" n="400 מ״מ בשנה" tone="lagoon" />
               <Metric v={fmt(r.pitM3, 1)} u="קוב" k="נפח בור חלחול" n="30 מ״מ מהשטח האטום" tone="fern" />
+            </div>
+            <div className="viz-grid">
+              <SitePlan plot={r.plot} footprint={r.building} green={r.green} minGreen={r.minInfiltration} />
+              <StackBar
+                label="הרכב המשטחים במגרש"
+                unit='מ"ר'
+                segments={[
+                  { label: "ירוק מחלחל", value: r.green, shade: 1, status: r.meetsInfiltration ? "ok" : "bad" },
+                  { label: "ריצוף וכבישים", value: r.paved, shade: 2 },
+                  { label: "גג ומבנה", value: r.building, shade: 4 },
+                ]}
+                marker={{ at: r.minInfiltration, label: "15% נדרש", status: r.meetsInfiltration ? "ok" : "bad" }}
+              />
             </div>
             {r.meetsInfiltration ? (
               <Stamp kind="ok" seal="עומד" title="עומד בדרישת 15% שטח חלחול">נדרש {fmt(r.minInfiltration)} מ"ר, קיים {fmt(r.green)} מ"ר.</Stamp>
@@ -253,12 +286,8 @@ export function GreenTool() {
               <Metric v={fmt(r.shade)} u='מ"ר' k="הצללה נדרשת" n="30% מהשטח המשותף" tone="amber" />
               <Metric v={fmt(r.shadeFromTrees)} u='מ"ר' k="הצללה מעצים" n="30 מ״ר לעץ" tone="moss" />
             </div>
-            <div>
-              <div className="spread" style={{ fontSize: 14, marginBottom: 6 }}><span>ערוגות נוי ושיחים, 40%</span><span className="mono">{fmt(r.ornamental)} מ"ר</span></div>
-              <div className="progress tone-fern"><i style={{ width: "40%" }} /></div>
-              <div className="spread" style={{ fontSize: 14, margin: "10px 0 6px" }}><span>דשא וכיסוי קרקע, 60%</span><span className="mono">{fmt(r.lawn)} מ"ר</span></div>
-              <div className="progress tone-moss"><i style={{ width: "60%" }} /></div>
-            </div>
+            <SitePlan plot={r.plot} footprint={r.building} green={Math.min(r.open, r.minGreen)} trees={r.trees} minGreen={r.minGreen} />
+            <StackBar label="חלוקת השטח הירוק המומלצת" unit='מ"ר' segments={[{ label: "ערוגות נוי ושיחים", value: r.ornamental, shade: 3 }, { label: "דשא וכיסוי קרקע", value: r.lawn, shade: 1 }]} />
             <div className="grid g3">
               <div><h4 style={{ fontWeight: 500, marginBottom: 8 }}>נכלל בחלחול</h4><ul className="notes"><li>ערוגות על קרקע טבעית</li><li>מדשאות ללא ריצוף תחתי</li><li>גינות גג בעומק קרקע 60 ס"מ לפחות</li></ul></div>
               <div><h4 style={{ fontWeight: 500, marginBottom: 8 }}>לא נכלל</h4><ul className="notes"><li>שטח מעל מרתפי חניה</li><li>משטחים מרוצפים</li><li>אדניות ועציצים</li></ul></div>
@@ -320,6 +349,7 @@ export function WaterTool() {
               <Metric v={fmt(r.irrigationM3)} u='מ"ק' k="השקיה בשנה" n={`${fmt(r.open)} מ״ר × ${r.rate}`} tone="fern" />
               <Metric v={<span className="ltr">{r.pipe}</span>} k="קוטר צינור מומלץ" n={`${fmt(r.peakLps, 2)} ל'/ש' בשיא`} tone="tide" />
             </div>
+            <StackBar label="צריכה שנתית: סניטרי מול השקיה" unit='מ"ק' segments={[...r.rows.filter((x) => x.annual > 0).map((x, i) => ({ label: x.config.label, value: x.annual, shade: ([4, 3, 2] as const)[i % 3] })), { label: "השקיה", value: r.irrigationM3, shade: 1 }]} />
             <Steps steps={r.steps} limits="מבוסס על תקני צריכה מקובלים. הערכים עשויים להשתנות לפי דרישות תאגיד יובלים. קוטר הצינור הוא אומדן ראשוני ונדרש חישוב הידראולי מפורט." />
           </>
         )}

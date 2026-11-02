@@ -5,20 +5,21 @@ import { search } from "../logic/search";
 import { href, navigate, type Route } from "../state/router";
 import { emptyProject, encodeState, exampleProject, checksStore, projectStore, useSavedAt } from "../state/store";
 import { copyText, useToast } from "./ui";
+import { Icon } from "./icons";
 
 /* אייקון האפליקציה: גיליון שרטוט מקופל עם תכנית קומה. החריג היחיד לכלל "בלי אייקונים". */
 export function AppIcon({ size = 34 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden="true">
-      <rect x="4" y="4" width="56" height="56" fill="#1d3a5f" />
-      <path d="M4 4h56v56H4z" fill="none" stroke="#0f2236" strokeWidth="2" />
+      <rect x="4" y="4" width="56" height="56" fill="#0b0b0b" />
+      <path d="M4 4h56v56H4z" fill="none" stroke="#0b0b0b" strokeWidth="2" />
       <g stroke="#e9e4d6" strokeWidth="1.6" fill="none">
         <path d="M14 48V20l12-6 12 6v28" />
         <path d="M38 48V28l12-4v24" />
         <path d="M10 48h44" />
         <path d="M20 26h12M20 32h12M20 38h12M42 33h4M42 39h4" opacity=".75" />
       </g>
-      <path d="M44 4h16v16z" fill="#e9c46a" />
+      <path d="M44 4h16v16z" fill="#ffffff" opacity=".9" />
     </svg>
   );
 }
@@ -199,7 +200,7 @@ export function TopBar({ route, onSearch }: { route: Route; onSearch: () => void
         <div className="bar-actions">
           <SavedIndicator />
           <button type="button" className="btn sm" onClick={onSearch} aria-label="חיפוש באוגדן" data-testid="search-open">
-            חיפוש <span className="kbd hide-sm">Ctrl K</span>
+            <Icon name="search" size={16} /><span className="hide-sm">חיפוש</span> <span className="kbd hide-sm">Ctrl K</span>
           </button>
           <AIMenu />
         </div>

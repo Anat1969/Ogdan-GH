@@ -1,6 +1,8 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { Step } from "../logic/calculators";
+import { Icon } from "./icons";
+import { CountUp, statusOf } from "./viz";
 import { href, type Route } from "../state/router";
 
 export function Sheet({ title, label, children, tone, id, className = "" }: { title?: ReactNode; label?: ReactNode; children: ReactNode; tone?: string; id?: string; className?: string }) {
@@ -29,7 +31,7 @@ export function Metric({ v, u, k, n, tone, hero }: { v: ReactNode; u?: string; k
   return (
     <div className={`metric ${hero ? "hero" : ""} ${tone ? `tone-${tone}` : ""}`} role="group" aria-label={k}>
       <div className="v">
-        {v}
+        {typeof v === "number" ? <CountUp value={v} /> : v}
         {u && <span className="u">{u}</span>}
       </div>
       <div className="k">{k}</div>
@@ -41,8 +43,9 @@ export function Metric({ v, u, k, n, tone, hero }: { v: ReactNode; u?: string; k
 export function Stamp({ kind, seal, title, children }: { kind: "ok" | "no" | "warn"; seal: string; title: string; children?: ReactNode }) {
   return (
     <div className={`stamp ${kind}`} role="status">
-      <span className="seal">{seal}</span>
+      <span className="seal" aria-hidden="true"><Icon name={kind === "ok" ? "check" : kind === "no" ? "x" : "alert"} size={18} strokeWidth={2.2} /></span>
       <div>
+        <span className="seal-t">{seal}</span>
         <b>{title}</b>
         {children && <div className="muted" style={{ fontSize: 14 }}>{children}</div>}
       </div>
@@ -111,7 +114,7 @@ export function Seg<T extends string>({ value, options, onChange, label }: { val
 
 export function Progress({ value, label }: { value: number; label: string }) {
   return (
-    <div className="progress" role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(value * 100)}>
+    <div className={`progress st-${statusOf(value)}`} role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(value * 100)}>
       <i style={{ width: `${Math.round(value * 100)}%` }} />
     </div>
   );
@@ -136,13 +139,13 @@ export function Crumbs({ items }: { items: { label: string; route?: Route }[] })
   );
 }
 
-export function PageHead({ crumbs, title, lead, label, tone, children }: { crumbs?: { label: string; route?: Route }[]; title: string; lead?: string; label?: string; tone?: string; children?: ReactNode }) {
+export function PageHead({ crumbs, title, lead, label, tone, children, icon }: { crumbs?: { label: string; route?: Route }[]; title: string; lead?: string; label?: string; tone?: string; children?: ReactNode; icon?: string }) {
   const reduce = useReducedMotion();
   return (
     <motion.header className={`page-head ${tone ? `tone-${tone}` : ""}`} initial={reduce ? false : { opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
       {crumbs && <Crumbs items={crumbs} />}
-      {label && <span className="label" style={{ color: "var(--tone, var(--pencil))" }}>{label}</span>}
-      <h1>{title}</h1>
+      {label && <span className="label">{label}</span>}
+      {icon ? <div className="ic-row" style={{ gap: 16 }}><span className="iconbox" style={{ width: 56, height: 56 }} aria-hidden="true"><Icon name={icon} size={28} /></span><h1>{title}</h1></div> : <h1>{title}</h1>}
       {lead && <p>{lead}</p>}
       {children}
     </motion.header>

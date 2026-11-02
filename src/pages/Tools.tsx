@@ -3,6 +3,7 @@ import { chapters, tools } from "../data/permitData";
 import { href } from "../state/router";
 import { toolComponents } from "../components/tools";
 import { PageHead, Sheet } from "../components/ui";
+import { Icon, IconBox, toolIcon } from "../components/icons";
 import NotFound from "./NotFound";
 
 export function ToolsIndex() {
@@ -14,7 +15,8 @@ export function ToolsIndex() {
           const c = chapters.find((x) => x.id === t.chapter)!;
           return (
             <a key={t.id} className={`card-link tone-${c.tone} tick`} href={href({ name: "tool", id: t.id })} data-testid={`tool-card-${t.id}`}>
-              <span className="label">{c.short}</span>
+              <IconBox name={toolIcon[t.id]} />
+              <span className="label" style={{ display: "block" }}>{c.short}</span>
               <span className="go" aria-hidden="true">←</span>
               <h3>{t.title}</h3>
               <p>{t.purpose}</p>
@@ -34,11 +36,11 @@ export function ToolPage({ id }: { id: string }) {
   const T = toolComponents[meta.id];
   return (
     <div className={`tone-${c.tone}`}>
-      <PageHead tone={c.tone} crumbs={[{ label: "בית", route: { name: "home" } }, { label: "כלים", route: { name: "tools" } }, { label: meta.title }]} label={`פרק ${c.short}`} title={meta.title} lead={meta.purpose} />
+      <PageHead tone={c.tone} crumbs={[{ label: "בית", route: { name: "home" } }, { label: "כלים", route: { name: "tools" } }, { label: meta.title }]} label={`פרק ${c.short}`} title={meta.title} lead={meta.purpose} icon={toolIcon[meta.id]} />
       <Sheet tone={c.tone} label="מחובר לתיק הבקשה">
         <T />
       </Sheet>
-      <p style={{ marginTop: 24 }}><a href={href({ name: "chapter", id: c.id })}>לדרישות ולאנשי הקשר בפרק {c.title}</a></p>
+      <p style={{ marginTop: 24 }}><a className="ic-row" href={href({ name: "chapter", id: c.id })}><Icon name="arrow" size={16} />לדרישות ולאנשי הקשר בפרק {c.title}</a></p>
     </div>
   );
 }

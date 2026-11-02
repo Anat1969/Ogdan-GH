@@ -71,6 +71,8 @@ await test("כל קישורי הסרגל העליון נפתחים, הסרגל �
 await test("סימון דרישה מעדכן התקדמות ונשמר אחרי רענון", async () => {
   const { page, ctx } = await newPage({ viewport: { width: 1280, height: 900 } });
   await page.goto(BASE + "/#/chapter/licensing");
+  await page.waitForTimeout(800);
+  await page.screenshot({ path: SHOTS + "chapter-before.png" });
   await page.getByTestId("check-licensing.graphic.0").click();
   await page.getByTestId("check-licensing.graphic.1").click();
   await page.getByTestId("saved").waitFor();
@@ -88,6 +90,9 @@ await test("שדה משותף: שטח מגרש שהוזן בניקוז מופי�
   await page.getByTestId("footprint").first().fill("400");
   await page.getByTestId("green").first().fill("100");
   await page.getByText("לא עומד בדרישת 15% שטח חלחול").waitFor();
+  assert(await page.locator(".siteplan svg").count() === 1, "site plan missing");
+  assert(await page.locator(".sb-seg.st-bad").count() === 1, "green segment not red when below 15%");
+  await page.waitForTimeout(1000);
   await page.screenshot({ path: SHOTS + "tool-drainage.png", fullPage: true });
   await page.goto(BASE + "/#/tool/green");
   assert((await page.getByTestId("plot").first().inputValue()) === "1000", "plot not shared to green tool");
@@ -103,6 +108,7 @@ await test("מחשבון חניה: 40 יח\"ד בתקן אשדוד נותנות 
   await page.locator('[aria-label="חניות נדרשות"] .v').getByText("48").waitFor();
   await page.getByRole("button", { name: "תקן ארצי" }).click();
   await page.locator('[aria-label="חניות נדרשות"] .v').getByText("40").waitFor();
+  assert(await page.locator(".waffle .wf").count() === 42, "waffle should show 40 + 2 operational squares");
   await page.getByTestId("parking-add").click();
   assert(await page.getByTestId("parking-units-1").count() === 1, "second use not added");
   await page.locator("summary", { hasText: "שלבי החישוב" }).click();
@@ -117,8 +123,11 @@ await test("תיק בקשה: פרויקט לדוגמה ממלא את הדוח ו
   const report = page.getByTestId("report");
   await report.getByText("בניין מגורים לדוגמה").waitFor();
   await report.getByText("עומד").first().waitFor();
+  assert(await report.locator(".ring").count() === 8, "expected 8 readiness rings");
+  assert(await report.locator(".gantt-row.mine").count() === 1, "selected track not marked");
   const parkingRow = await report.locator("tr", { hasText: "חניה" }).first().textContent();
   assert(/\d+ חניות/.test(parkingRow), "parking row missing value");
+  await page.waitForTimeout(1200);
   await page.screenshot({ path: SHOTS + "project-report.png", fullPage: true });
   await page.emulateMedia({ media: "print" });
   assert(await page.locator(".topbar").isHidden(), "topbar visible in print");
@@ -193,6 +202,7 @@ await test("נייד 390px: בלי גלילה אופקית בכל הדפים", a
   await page.screenshot({ path: SHOTS + "home-mobile.png", fullPage: true });
   await page.goto(BASE + "/#/tool/parking");
   await page.getByTestId("parking-units-0").fill("12");
+  await page.waitForTimeout(1500);
   await page.screenshot({ path: SHOTS + "parking-mobile.png", fullPage: true });
   await ctx.close();
 });

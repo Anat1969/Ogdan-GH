@@ -6,6 +6,7 @@ import { toolComponents } from "../components/tools";
 import { CheckMark, PageHead, Progress, Sheet, Stamp, copyText, useToast } from "../components/ui";
 import { ContactList } from "./Contacts";
 import NotFound from "./NotFound";
+import { chapterIcon } from "../components/icons";
 
 function Checklist({ chapter, block }: { chapter: Ch; block: Extract<Block, { kind: "checklist" }> }) {
   const checks = useChecks();
@@ -155,6 +156,7 @@ export default function Chapter({ id }: { id: string }) {
         label={`פרק ${String(idx + 1).padStart(2, "0")} מתוך ${chapters.length}`}
         title={chapter.title}
         lead={chapter.description}
+        icon={chapterIcon[chapter.id]}
       >
         {keys.length > 0 && (
           <div style={{ maxWidth: 420, display: "grid", gap: 6, marginTop: 8 }}>
