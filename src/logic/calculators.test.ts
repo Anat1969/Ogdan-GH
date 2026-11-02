@@ -97,3 +97,28 @@ describe("מים", () => {
     expect(pipeFor(100)).toBe('3"+');
   });
 });
+
+import { parsePlanFile, runPlanCheck } from "./planCheck";
+import { exampleProject } from "../state/store";
+
+describe("בדיקת תכנית", () => {
+  it("פרויקט לדוגמה: חניה חסרה, בור חלחול עומד, גנרטור חסר מעל 29 מ'", () => {
+    const r = Object.fromEntries(runPlanCheck(exampleProject()).map((c) => [c.id, c]));
+    expect(r.parking_regular.required).toBe(72);
+    expect(r.parking_regular.status).toBe("warn"); // 70 מתוך 72: חסר פחות מ-10%
+    expect(r.pit_volume.status).toBe("ok");
+    expect(r.generators.required).toBe(1);
+    expect(r.generators.status).toBe("bad");
+    expect(r.trees.status).toBe("bad"); // 5 מתוך 6 חסר יותר מ-10%
+  });
+  it("אין ערך מוצע: לא נבדק", () => {
+    const p = exampleProject();
+    p.proposed = {};
+    expect(runPlanCheck(p).every((c) => c.status === "idle")).toBe(true);
+  });
+  it("קריאת CSV ו-JSON", () => {
+    expect(parsePlanFile("id,value\nparking_regular,48\ntrees,6\nunknown,3")).toEqual({ parking_regular: "48", trees: "6" });
+    expect(parsePlanFile('{"proposed":{"pit_volume":12,"x":1}}')).toEqual({ pit_volume: "12" });
+    expect(parsePlanFile("עצים בוגרים בתכנית הנטיעה\t7")).toEqual({ trees: "7" });
+  });
+});

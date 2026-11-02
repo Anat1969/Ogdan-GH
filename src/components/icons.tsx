@@ -28,6 +28,14 @@ const paths: Record<string, string> = {
   car: "M5 11l2-5h10l2 5 M3 11h18v6H3z M7 17v2 M17 17v2 M7 14h.5 M16.5 14h.5",
   bin: "M4 6h16 M6 6l1 15h10l1-15",
   tree: "M12 21v-7 M12 14a5 5 0 1 0 0-10 5 5 0 0 0 0 10z",
+  plus: "M12 5v14 M5 12h14",
+  minus: "M5 12h14",
+  reset: "M4 12a8 8 0 1 0 2.5-5.8 M4 4v5h5",
+  expand: "M4 9V4h5 M20 9V4h-5 M4 15v5h5 M20 15v5h-5",
+  shrink: "M9 4v5H4 M15 4v5h5 M9 20v-5H4 M15 20v-5h5",
+  compare: "M4 4h7v16H4z M13 4h7v16h-7z M6 8h3 M6 12h3 M15 8h3 M15 12h3 M15 16h3",
+  upload: "M12 16V4 M7 9l5-5 5 5 M4 20h16",
+  download: "M12 4v12 M7 11l5 5 5-5 M4 20h16",
   coin: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M9 9h4.5a2 2 0 0 1 0 4H9v-4z M9 13h5",
 };
 

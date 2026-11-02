@@ -54,8 +54,18 @@
   color-scheme: dark;
 }
 
-/* פרקים אינם צבעוניים: כולם בשחור. צבע שמור לסטטוס */
-.tone-ink, .tone-moss, .tone-clay, .tone-tide, .tone-fern, .tone-amber, .tone-plum, .tone-lagoon, .tone-olive { --tone: var(--ink); }
+/* פלטת אשדוד לגרפיקה: כל אגף בצבע מזהה. הממשק עצמו לבן, אפורים ושחור. */
+:root {
+  --ash-blue: #1f9bd7; --ash-blue-2: #1474a8; --ash-sky: #63bde8;
+  --ash-green: #6fb33c; --ash-green-2: #3f8a25;
+  --ash-yellow: #f3b01b; --ash-yellow-2: #c98a00;
+  --ash-red: #e5482b; --ash-red-2: #b8321b; --ash-orange: #f07c3a;
+  /* שלושה גווני אפור */
+  --gray-dark: #3d3d3d; --gray-mid: #8c8c8c; --gray-light: #dcdcdc;
+}
+.tone-ink { --tone: var(--ash-blue); } .tone-moss { --tone: var(--ash-red); } .tone-clay { --tone: var(--ash-yellow-2); }
+.tone-tide { --tone: var(--ash-sky); } .tone-fern { --tone: var(--ash-green); } .tone-amber { --tone: var(--ash-yellow); }
+.tone-plum { --tone: var(--ash-orange); } .tone-lagoon { --tone: var(--ash-blue-2); } .tone-olive { --tone: var(--ash-green-2); }
 .st-ok { --st: var(--ok); } .st-warn { --st: var(--warn); } .st-bad { --st: var(--bad); } .st-idle { --st: var(--idle); }
 
 /* ============ בסיס ============ */
@@ -444,6 +454,240 @@ td.num { font-family: var(--mono); }
 .gantt-bar { height: 16px; background: var(--g0); position: relative; border: 1px solid var(--rule); }
 .gantt-bar i { position: absolute; inset-block: 0; inset-inline-start: 0; background: var(--g2); display: block; }
 .gantt-row.mine .gantt-bar i { background: var(--ink); }
+
+
+/* ============ גרסה 3: מסגרות, שורות, המחשה ============ */
+:root { --gutter: clamp(16px, 2.6vw, 48px); --frame-pad: clamp(16px, 1.6vw, 28px); }
+.wrap { width: min(1760px, 100%); padding-inline: var(--gutter); }
+@media (min-width: 720px) { .wrap { padding-inline: var(--gutter); } }
+body { font-size: clamp(15px, 0.35vw + 13.6px, 17px); }
+
+/* כפתורים מובלטים: עומק, קצה תחתון, שקיעה בלחיצה */
+.btn {
+  border: 1px solid var(--gray-mid); border-bottom-width: 3px; border-bottom-color: var(--gray-dark);
+  background: linear-gradient(var(--sheet), var(--paper)); box-shadow: 0 2px 0 rgba(0,0,0,.06), 0 6px 12px -8px rgba(0,0,0,.35);
+  font-weight: 600;
+}
+.btn:hover { transform: translateY(-2px); border-color: var(--ink); border-bottom-color: var(--ink); box-shadow: 0 4px 0 rgba(0,0,0,.05), 0 12px 18px -10px rgba(0,0,0,.4); }
+.btn:active { transform: translateY(1px); border-bottom-width: 1px; margin-top: 2px; box-shadow: var(--shadow-press); }
+.btn.primary, .btn[aria-pressed="true"], .btn.is-active { background: var(--ink); color: var(--sheet); border-color: var(--ink); border-bottom-color: #000; }
+:root[data-theme="dark"] .btn.primary, :root[data-theme="dark"] .btn[aria-pressed="true"] { border-bottom-color: var(--gray-mid); }
+.btn.ghost { border-color: transparent; border-bottom-width: 1px; background: transparent; box-shadow: none; font-weight: 500; }
+.btn.ghost:hover { border-color: var(--gray-mid); background: var(--sheet); }
+.btn.icon { padding: 0; width: 34px; min-height: 34px; }
+.btn.choice { flex-direction: column; align-items: flex-start; white-space: normal; text-align: start; padding: 14px 16px; min-height: 120px; gap: 4px; position: relative; }
+.btn.choice .num-badge { position: absolute; inset-inline-end: 10px; top: 10px; }
+.seg .btn { border-bottom-width: 1px; }
+.seg .btn:active { margin-top: 0; }
+.input { border-color: var(--gray-mid); }
+
+/* מספור */
+.num-badge { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 5px; font-size: 11px; font-weight: 600; background: var(--tone, var(--ink)); color: #fff; flex: 0 0 auto; }
+.navlink { font-variant-numeric: tabular-nums; }
+
+/* ראש עמוד */
+.page-head { margin-bottom: var(--s4); }
+.page-head h1 { white-space: pre-wrap; }
+.page-head .iconbox { border-color: var(--tone, var(--ink)); color: var(--tone, var(--ink)); border-width: 2px; }
+.head-meta { display: flex; gap: var(--s4); flex-wrap: wrap; align-items: end; margin-top: var(--s2); }
+.toc { display: flex; flex-wrap: wrap; gap: 6px; flex: 3 1 400px; }
+.toc-i { font-size: 12px; padding: 3px 8px; background: var(--paper); border: 1px solid var(--gray-light); color: var(--gray-dark); }
+.toc-i .mono { color: var(--tone, var(--ink)); font-weight: 600; }
+
+/* מסגרות ושורות */
+.rows { display: grid; gap: var(--s4); grid-template-columns: minmax(0, 1fr); }
+.frame { background: var(--sheet); border: 1px solid var(--gray-light); border-top: 3px solid var(--tone, var(--ink)); padding: var(--frame-pad); min-width: 0; box-shadow: var(--shadow-1); }
+.frame-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: start; margin-bottom: 14px; }
+.frame-num { font-size: 13px; font-weight: 600; padding: 4px 8px; border: 2px solid var(--tone, var(--ink)); color: var(--ink); line-height: 1.2; }
+.frame-head h3 { font-size: clamp(17px, 1.1vw + 10px, 22px); font-weight: 500; }
+.frame-explain { font-size: 14px; color: var(--gray-dark); margin-top: 4px; max-width: 75ch; padding-inline-start: 10px; border-inline-start: 2px solid var(--gray-light); }
+.frame-label { white-space: nowrap; }
+.lead-text { font-size: 16px; color: var(--gray-dark); max-width: 75ch; }
+.duo { display: grid; gap: var(--s4); grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 900px) { .duo { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* פיצול: מסגרת טקסט + מסגרת המחשה. היחס משתנה עם רוחב המסך */
+.split { display: grid; gap: var(--s4); grid-template-columns: minmax(0, 1fr); align-items: stretch; }
+@media (min-width: 1000px) { .split { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); } }
+@media (min-width: 1500px) { .split { grid-template-columns: minmax(0, 4fr) minmax(0, 6fr); } }
+.check-split { align-items: start; }
+@media (min-width: 1000px) { .check-split { grid-template-columns: minmax(0, 7fr) minmax(300px, 3fr); } }
+
+/* רשימות ממוספרות */
+.numlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.numlist li { display: flex; gap: 10px; align-items: baseline; padding: 7px 8px; border: 1px solid transparent; transition: background .15s, border-color .15s; }
+.numlist li:hover { background: var(--paper); border-color: var(--gray-light); }
+.checklist .check { grid-template-columns: 26px 24px minmax(0, 1fr); gap: 10px; padding: 8px 10px; }
+.checklist .num-badge { margin-top: 1px; }
+.check:hover .num-badge, .numlist li:hover .num-badge { box-shadow: 0 0 0 3px color-mix(in srgb, var(--tone, var(--ink)) 25%, transparent); }
+.cards-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.mini-card { background: var(--paper); border: 1px solid var(--gray-light); padding: 12px; display: grid; gap: 6px; align-content: start; transition: border-color .15s, transform .15s; }
+.mini-card:hover { border-color: var(--tone, var(--ink)); transform: translateY(-2px); }
+.mini-card p { font-size: 14px; color: var(--gray-dark); }
+.stages { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0; }
+.stages li { position: relative; padding: 14px 12px; border: 1px solid var(--gray-light); border-inline-start-width: 0; display: grid; gap: 4px; background: var(--sheet); }
+.stages li:first-child { border-inline-start-width: 1px; }
+.stages li .mono { color: var(--tone, var(--ink)); font-size: 22px; font-weight: 600; }
+.stages li i { position: absolute; inset-inline-end: -7px; top: 50%; width: 12px; height: 12px; background: var(--tone); transform: translateY(-50%) rotate(45deg); z-index: 1; }
+
+/* אנשי קשר בשורות */
+.contacts-strip { margin-bottom: var(--s4); }
+.contacts-grid > div { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); column-gap: var(--s4); }
+
+/* ============ מסגרת המחשה ============ */
+.viewer { margin: 0; background: var(--sheet); border: 1px solid var(--gray-light); border-top: 3px solid var(--tone, var(--ink)); display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-width: 0; min-height: 360px; box-shadow: var(--shadow-1); }
+.viewer-bar { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 8px 10px; border-bottom: 1px solid var(--gray-light); background: var(--paper); }
+.viewer-title { font-weight: 500; font-size: 14px; }
+.zoom-v { font-size: 12px; min-width: 42px; text-align: center; color: var(--gray-dark); }
+.viewer-stage { position: relative; overflow: hidden; cursor: grab; touch-action: none; min-height: 300px; aspect-ratio: 4 / 3; perspective: 1400px;
+  background-color: var(--sheet);
+  background-image: linear-gradient(var(--g0) 1px, transparent 1px), linear-gradient(90deg, var(--g0) 1px, transparent 1px);
+  background-size: 20px 20px; }
+@media (min-width: 1500px) { .viewer-stage { aspect-ratio: 16 / 10; } }
+.viewer-stage:active { cursor: grabbing; }
+.viewer-canvas { position: absolute; inset: 0; display: grid; place-items: center; padding: 12px; transform-style: preserve-3d; }
+.viewer-canvas > svg, .axo-stack { width: 100%; height: 100%; max-height: 100%; }
+.viewer-hint { position: absolute; bottom: 6px; inset-inline-start: 8px; font-size: 11px; color: var(--gray-mid); pointer-events: none; }
+.viewer-cap { font-size: 12px; color: var(--gray-mid); padding: 6px 10px; border-top: 1px solid var(--gray-light); }
+.viewer.full { position: fixed; inset: calc(var(--bar) + 8px) 8px 8px; z-index: 70; box-shadow: var(--shadow-3); }
+.viewer.full .viewer-stage { aspect-ratio: auto; }
+
+/* תלת־ממד אקסונומטרי: השרטוט מוטה והמבנים מוגבהים בשכבות */
+.axo-stack { position: relative; transform-style: preserve-3d; transform: rotateX(56deg) rotateZ(-32deg) scale(.82); }
+.axo-layer { position: absolute; inset: 0; transform-style: preserve-3d; }
+.axo-layer svg { width: 100%; height: 100%; }
+.axo-layer.mass svg > *:not(defs), .axo-layer.roof svg > *:not(defs) { visibility: hidden; }
+.axo-layer.mass .wall-fill, .axo-layer.mass .trafo, .axo-layer.mass .wasteroom, .axo-layer.mass .mamad { visibility: visible; fill: var(--gray-dark); stroke: none; }
+.axo-layer.roof .wall-fill, .axo-layer.roof .trafo, .axo-layer.roof .wasteroom { visibility: visible; fill: var(--gray-mid); stroke: var(--ink); }
+.axo-layer.mass .wall-fill, .axo-layer.roof .wall-fill, .axo-layer.mass .trafo, .axo-layer.roof .trafo, .axo-layer.mass .wasteroom, .axo-layer.roof .wasteroom { visibility: visible; }
+.axo-layer.mass g, .axo-layer.roof g { visibility: hidden; }
+.axo-layer.base { filter: drop-shadow(0 30px 30px rgba(0,0,0,.18)); }
+
+/* ============ שפת השרטוט ============ */
+.drawing { width: 100%; height: 100%; direction: ltr; font-family: var(--sans); }
+.drawing .dt { fill: var(--gray-dark); font-size: 10px; }
+.drawing .plot { fill: var(--sheet); stroke: var(--ink); stroke-width: 1.6; stroke-dasharray: 10 3 2 3; }
+.drawing .street { fill: var(--gray-light); }
+.drawing .street-mark { stroke: var(--sheet); stroke-width: 1.5; stroke-dasharray: 10 8; }
+.drawing .sidewalk { fill: var(--g0); stroke: var(--gray-mid); stroke-width: .6; }
+.drawing .neighbor { fill: var(--g0); stroke: var(--gray-light); }
+.drawing .wall-fill { fill: var(--gray-dark); stroke: var(--ink); stroke-width: 1; }
+.drawing .wall-fill.pending { fill: var(--gray-mid); stroke-dasharray: 4 3; }
+.drawing .room { fill: var(--sheet); }
+.drawing .wall { stroke: var(--gray-dark); stroke-width: 4; }
+.drawing .box { fill: var(--sheet); stroke: var(--gray-dark); stroke-width: 1; }
+.drawing .box.tone { fill: color-mix(in srgb, var(--tone) 16%, var(--sheet)); stroke: var(--tone); stroke-width: 2; }
+.drawing .sheet-frame { fill: var(--sheet); stroke: var(--ink); stroke-width: 1.5; }
+.drawing .thin { stroke: var(--gray-mid); stroke-width: .8; fill: none; }
+.drawing .dashed { stroke-dasharray: 4 3; }
+.drawing .column { fill: var(--ink); }
+.drawing .mamad { fill: var(--ash-red); fill-opacity: .25; stroke: var(--ash-red); stroke-width: 2; }
+.drawing .fixture { fill: var(--sheet); stroke: var(--ash-blue); stroke-width: 1.2; }
+.drawing .shaft { fill: var(--gray-light); stroke: var(--gray-dark); }
+.drawing .ac { fill: var(--ash-sky); stroke: var(--ash-blue-2); }
+.drawing .ramp { fill: color-mix(in srgb, var(--ash-green) 25%, var(--sheet)); stroke: var(--ash-green-2); }
+.drawing .window { fill: color-mix(in srgb, var(--ash-sky) 35%, var(--sheet)); stroke: var(--gray-dark); stroke-width: .6; }
+.drawing .ground { stroke: var(--ink); stroke-width: 2; fill: none; }
+.drawing .slab-line { stroke: var(--gray-light); stroke-width: 1.2; }
+.drawing .f-green { fill: color-mix(in srgb, var(--ash-green) 22%, var(--sheet)); }
+.drawing .s-green { stroke: var(--ash-green); stroke-width: 1.2; }
+.drawing .f-earth { fill: #e8dcc6; } .drawing .f-earth-dot { fill: #b9a47c; }
+:root[data-theme="dark"] .drawing .f-earth { fill: #3a3326; }
+.drawing .f-tone { fill: var(--tone, var(--ink)); }
+.drawing .flow { stroke: var(--tone, var(--ink)); stroke-width: 2; fill: none; }
+.drawing .fence { fill: none; stroke: var(--ash-red); stroke-width: 3; stroke-dasharray: 2 4; }
+.drawing .radius { fill: color-mix(in srgb, var(--ash-yellow) 14%, transparent); stroke: var(--ash-yellow-2); stroke-dasharray: 5 4; }
+.drawing .gate { fill: var(--ash-yellow); stroke: var(--ink); }
+.drawing .tree { fill: var(--ash-green); stroke: var(--ash-green-2); }
+.drawing .canopy { fill: color-mix(in srgb, var(--ash-green) 35%, transparent); stroke: var(--ash-green-2); stroke-width: 1.5; }
+.drawing .trunk, .drawing .trunk-line { fill: #7a5232; stroke: #7a5232; stroke-width: 6; }
+.drawing .roots { stroke: #7a5232; stroke-width: 1.5; fill: none; }
+.drawing .topsoil { fill: #b98f5f; fill-opacity: .55; stroke: #7a5232; stroke-dasharray: 4 3; }
+.drawing .drip { stroke: var(--ash-blue); stroke-width: 2.5; stroke-dasharray: 1 5; stroke-linecap: round; }
+.drawing .paving { fill: var(--gray-light); stroke: var(--gray-mid); }
+.drawing .bin { fill: var(--ash-orange); stroke: var(--ink); }
+.drawing .valve { fill: var(--ash-blue); stroke: var(--ink); }
+.drawing .stamp-box { fill: var(--sheet); stroke: var(--tone); stroke-width: 1.5; }
+.drawing .stall { fill: var(--sheet); stroke: var(--gray-dark); stroke-width: 1; }
+.drawing .stall.acc { fill: color-mix(in srgb, var(--ash-blue) 30%, var(--sheet)); stroke: var(--ash-blue-2); stroke-width: 2; }
+.drawing .stall.ev { fill: color-mix(in srgb, var(--ash-yellow) 30%, var(--sheet)); stroke: var(--ash-yellow-2); }
+.drawing .bolt { stroke: var(--ash-yellow-2); stroke-width: 1.6; fill: none; }
+.drawing .aisle { fill: var(--g0); stroke: none; }
+.drawing .sight { stroke: var(--ash-red); stroke-width: 1.6; stroke-dasharray: 6 4; fill: none; }
+.drawing .sight-fill { fill: color-mix(in srgb, var(--ash-red) 14%, transparent); }
+.drawing .car { fill: var(--gray-mid); }
+.drawing .pit { fill: color-mix(in srgb, var(--ash-blue) 25%, var(--sheet)); stroke: var(--ash-blue-2); stroke-width: 2; }
+.drawing .pipe { stroke: var(--ash-blue); stroke-width: 3; fill: none; }
+.drawing .pipe.water { stroke: var(--ash-blue); } .drawing .pipe.sewer { stroke: #8a5a2b; }
+.drawing .chamber { fill: var(--sheet); stroke: var(--ink); stroke-width: 2; }
+.drawing .chamber-sec { fill: var(--gray-light); stroke: var(--ink); stroke-width: 1.5; }
+.drawing .pit-sec { fill: color-mix(in srgb, var(--ash-blue) 12%, var(--sheet)); stroke: var(--ash-blue-2); stroke-width: 2; }
+.drawing .gravel { fill: var(--gray-mid); }
+.drawing .infil { stroke: var(--ash-blue); stroke-width: 2; stroke-dasharray: 2 3; }
+.drawing .rain { stroke: var(--ash-sky); stroke-width: 2; }
+.drawing .pit-outline { fill: none; stroke: #7a5232; stroke-dasharray: 4 3; stroke-width: 1.5; }
+.drawing .trafo { fill: var(--ash-yellow); stroke: var(--ink); }
+.drawing .lamp { fill: var(--ash-yellow); stroke: var(--ink); stroke-width: .6; }
+.drawing .lamp-glow { fill: color-mix(in srgb, var(--ash-yellow) 20%, transparent); }
+.drawing .cable { fill: var(--ash-yellow-2); }
+.drawing .stair { fill: var(--gray-mid); }
+.drawing .threshold { stroke: var(--ash-red); stroke-width: 2; stroke-dasharray: 8 4; }
+.drawing .wasteroom { fill: var(--ash-orange); stroke: var(--ink); }
+.drawing .tamun { fill: color-mix(in srgb, var(--ash-green) 40%, var(--sheet)); stroke: var(--ash-green-2); stroke-width: 2; }
+.drawing .tamun.dry { fill: color-mix(in srgb, var(--ash-blue) 30%, var(--sheet)); stroke: var(--ash-blue-2); }
+.drawing .tamun-sec { fill: color-mix(in srgb, var(--ash-green) 25%, var(--sheet)); stroke: var(--ash-green-2); stroke-width: 2; }
+.drawing .tamun-top { fill: var(--gray-dark); }
+.drawing .truck { fill: var(--ash-orange); stroke: var(--ink); }
+.drawing .meter { fill: var(--sheet); stroke: var(--ash-blue-2); stroke-width: 2; }
+.drawing .manhole { fill: var(--sheet); stroke: #8a5a2b; stroke-width: 2; }
+.drawing .asbestos { fill: repeating-linear-gradient(45deg, red, red); fill: color-mix(in srgb, var(--ash-red) 25%, var(--sheet)); stroke: var(--ash-red); stroke-width: 2; stroke-dasharray: 4 2; }
+.drawing .probe { stroke: var(--ink); stroke-width: 3; }
+.drawing .wave { stroke: var(--ash-orange); stroke-width: 2; fill: none; }
+.drawing .dim line { stroke: var(--gray-dark); stroke-width: .8; }
+.drawing .dim text { fill: var(--ink); font-size: 9px; font-family: var(--mono); }
+.callout circle { fill: var(--tone, var(--ink)); stroke: #fff; stroke-width: 1.5; transition: r .2s; }
+.callout text { fill: #fff; font-size: 11px; font-weight: 700; font-family: var(--mono); }
+.callout.dim { opacity: .35; }
+.callout.on circle:not(.callout-pulse) { fill: var(--ink); }
+.callout-pulse { fill: color-mix(in srgb, var(--tone) 35%, transparent) !important; stroke: none !important; animation: pulse 1.2s ease-out infinite; transform-origin: center; transform-box: fill-box; }
+@keyframes pulse { from { transform: scale(.6); opacity: 1; } to { transform: scale(1.6); opacity: 0; } }
+
+/* ============ בדיקת תכנית ============ */
+.check-table td { vertical-align: middle; }
+.input.sm { min-height: 34px; padding: 5px 8px; font-size: 14px; }
+.group-row td { background: var(--paper); font-weight: 600; font-size: 13px; color: var(--gray-dark); }
+.cmp { position: relative; height: 12px; background: var(--g0); border: 1px solid var(--gray-light); }
+.cmp-p { position: absolute; inset-block: 0; inset-inline-start: 0; background: var(--st); display: block; }
+.cmp-r { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--ink); margin-inline-start: -1px; }
+.status-bar { display: flex; width: 100%; height: 14px; border: 1px solid var(--ink); }
+.status-bar i { display: block; background: var(--st); height: 100%; }
+
+/* ============ גרפיקה צבעונית: מגדל וויזואליזציות ============ */
+.slab .front { background: var(--tone); }
+.slab .back { background: color-mix(in srgb, var(--tone) 60%, #000); }
+.slab .left { background: color-mix(in srgb, var(--tone) 80%, #000); }
+.slab .right { background: color-mix(in srgb, var(--tone) 70%, #000); }
+.slab:nth-child(odd) .front { background: var(--tone); }
+.slab .top { border-color: var(--tone); background: color-mix(in srgb, var(--tone) 12%, var(--sheet)); }
+.legend a { border-inline-start: 4px solid var(--tone); }
+.legend a .mono:first-child { color: var(--tone); font-weight: 600; }
+.card-link .iconbox { color: var(--tone, var(--ink)); border-color: var(--tone, var(--ink)); }
+.card-link:hover .iconbox { background: var(--tone, var(--ink)); color: #fff; }
+.tick { border-inline-start: 4px solid var(--tone); }
+.metric .v { color: var(--ink); }
+.shade-1 { background: var(--ash-green); } .shade-2 { background: var(--gray-mid); } .shade-3 { background: var(--ash-blue); } .shade-0 { background: var(--gray-light); }
+.sw.hatched { background: repeating-linear-gradient(45deg, var(--ash-green) 0 2px, color-mix(in srgb, var(--ash-green) 35%, #fff) 2px 4px); }
+.wf.solid { background: var(--ash-blue); } .wf.mid { background: var(--gray-mid); } .wf.ring { box-shadow: inset 0 0 0 2px var(--ash-blue-2); }
+.wf.dot { background: var(--ash-yellow); } .wf.dot::after { background: #fff; }
+.sp-green { fill: color-mix(in srgb, var(--ash-green) 30%, var(--sheet)); }
+.hatch-line { stroke: var(--ash-green); }
+.sp-tree { fill: var(--ash-green-2); }
+.sp-building { fill: var(--gray-dark); }
+.tank-fill { opacity: 1; }
+.track-bar i { background: linear-gradient(90deg, var(--ash-blue), var(--ash-sky)); }
+.gantt-row.mine .gantt-bar i { background: var(--ash-blue); }
+.hero-stats b { color: var(--ink); }
+.home-hero h1 strong { color: var(--ash-blue-2); }
 
 /* ============ מובייל ============ */
 @media (max-width: 860px) {

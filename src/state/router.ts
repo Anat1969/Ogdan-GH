@@ -8,6 +8,7 @@ export type Route =
   | { name: "tools" }
   | { name: "contacts" }
   | { name: "project" }
+  | { name: "check" }
   | { name: "notfound" };
 
 export function parse(hash: string): Route {
@@ -19,6 +20,7 @@ export function parse(hash: string): Route {
   if (parts[0] === "tools") return { name: "tools" };
   if (parts[0] === "contacts") return { name: "contacts" };
   if (parts[0] === "project") return { name: "project" };
+  if (parts[0] === "check") return { name: "check" };
   return { name: "notfound" };
 }
 

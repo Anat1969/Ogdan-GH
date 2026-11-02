@@ -4,15 +4,18 @@ import { href } from "../state/router";
 import { PageHead, Sheet, copyText, useToast } from "../components/ui";
 import { Icon } from "../components/icons";
 
-export function ContactList({ people, compact }: { people: (ContactPerson & { department?: string; chapterId?: string })[]; compact?: boolean }) {
+export function ContactList({ people, compact, numbered = true }: { people: (ContactPerson & { department?: string; chapterId?: string })[]; compact?: boolean; numbered?: boolean }) {
   const toast = useToast();
   return (
     <div>
-      {people.map((p) => (
+      {people.map((p, i) => (
         <div className="person" key={`${p.name}-${p.phone}-${p.email}`} data-testid="person">
-          <div style={{ minWidth: 0 }}>
+          <div style={{ minWidth: 0, display: "flex", gap: 10, alignItems: "baseline" }}>
+            {numbered && <span className="num-badge mono">{i + 1}</span>}
+            <div style={{ minWidth: 0 }}>
             <b>{p.name}</b>
             <div className="role">{p.role}{p.department && !compact ? ` · ${p.department}` : ""}</div>
+            </div>
           </div>
           <div className="acts">
             <a className="btn sm" href={`tel:${p.phone.replace(/-/g, "")}`} aria-label={`חיוג ל${p.name}`}><Icon name="phone" size={15} /><span className="ltr mono">{p.phone}</span></a>

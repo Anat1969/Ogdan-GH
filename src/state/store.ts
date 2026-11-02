@@ -16,6 +16,8 @@ export interface Project {
   parking: ParkingEntry[];
   irrigation: string;
   water: WaterEntry[];
+  /** ערכים מוצעים מתכנית הבינוי, לבדיקה מול האוגדן */
+  proposed: Record<string, string>;
 }
 
 export const emptyProject = (): Project => ({
@@ -32,6 +34,7 @@ export const emptyProject = (): Project => ({
   parking: [{ id: "p1", useType: "residential_small", units: "" }],
   irrigation: "mixed",
   water: [{ id: "w1", type: "residential", units: "", residents: "" }],
+  proposed: {},
 });
 
 export const exampleProject = (): Project => ({
@@ -55,6 +58,7 @@ export const exampleProject = (): Project => ({
     { id: "w1", type: "residential", units: "40", residents: "" },
     { id: "w2", type: "commercial", units: "12", residents: "" },
   ],
+  proposed: { parking_regular: "70", parking_operational: "3", parking_disabled: "4", parking_ev: "15", green_permeable: "350", pit_volume: "50", trees: "5", shade_area: "120", waste_wet: "5", waste_dry: "5", recycling: "1", garden_waste: "12", pipe_mm: "40", height_m: "31", generators: "0" },
 });
 
 const KEYS = { project: "ogdan.v2.project", checks: "ogdan.v2.checks", saved: "ogdan.v2.savedAt" };

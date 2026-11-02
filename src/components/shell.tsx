@@ -171,10 +171,11 @@ function SavedIndicator() {
 }
 
 const navItems: { label: string; route: Route; tone?: string }[] = [
-  ...chapters.map((c) => ({ label: c.short, route: { name: "chapter", id: c.id } as Route, tone: c.tone })),
+  ...chapters.map((c, i) => ({ label: `${String(i + 1).padStart(2, "0")} ${c.short}`, route: { name: "chapter", id: c.id } as Route, tone: c.tone })),
   { label: "כלים", route: { name: "tools" } },
   { label: "טלפונים", route: { name: "contacts" } },
   { label: "תיק הבקשה", route: { name: "project" } },
+  { label: "בדיקת תכנית", route: { name: "check" } },
 ];
 
 const isCurrent = (cur: Route, r: Route) => cur.name === r.name && ("id" in r ? "id" in cur && cur.id === r.id : true);

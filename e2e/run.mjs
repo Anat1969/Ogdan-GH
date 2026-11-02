@@ -53,7 +53,7 @@ await test("כל קישורי הסרגל העליון נפתחים, הסרגל �
   const { page, errors, ctx } = await newPage({ viewport: { width: 1440, height: 900 } });
   await page.goto(BASE + "/#/");
   const links = await page.locator(".navrow a").evaluateAll((as) => as.map((a) => a.getAttribute("href")));
-  assert(links.length === 12, `expected 12 nav links, got ${links.length}`);
+  assert(links.length === 13, `expected 13 nav links, got ${links.length}`);
   for (const h of links) {
     await page.locator(`.navrow a[href="${h}"]`).click();
     await page.waitForFunction((h) => location.hash === h, h);
@@ -190,7 +190,7 @@ await test("ספר טלפונים: חיפוש וסינון לפי מחלקה", a
 
 await test("נייד 390px: בלי גלילה אופקית בכל הדפים", async () => {
   const { page, ctx } = await newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
-  const routes = ["#/", "#/chapter/licensing", "#/chapter/roads", "#/chapter/environment", "#/tool/parking", "#/tool/water", "#/tools", "#/contacts", "#/project"];
+  const routes = ["#/", "#/chapter/licensing", "#/chapter/roads", "#/chapter/environment", "#/tool/parking", "#/tool/water", "#/tools", "#/contacts", "#/project", "#/check"];
   for (const r of routes) {
     await page.goto(BASE + "/" + r);
     await page.locator("main h1").first().waitFor();
@@ -224,6 +224,47 @@ await test("התקנה מ-Chrome: manifest תקין ו-getInstallabilityErrors �
   const cdp = await ctx.newCDPSession(page);
   const { installabilityErrors } = await cdp.send("Page.getInstallabilityErrors");
   assert(installabilityErrors.length === 0, "installability: " + JSON.stringify(installabilityErrors));
+  await ctx.close();
+});
+
+await test("מסגרת המחשה: מעבר על דרישה מדגיש את המספר בשרטוט, זום ולשוניות תכנית/חתך/תלת־ממד", async () => {
+  const { page, ctx, errors } = await newPage({ viewport: { width: 1600, height: 1000 } });
+  await page.goto(BASE + "/#/chapter/roads");
+  const v = page.getByTestId("viewer-parking");
+  await v.waitFor();
+  await page.getByTestId("check-roads.parking.1").hover();
+  assert(await v.locator(".callout.on text").textContent() === "2", "callout 2 not highlighted on hover");
+  await v.getByRole("button", { name: "התקרבות" }).click();
+  assert((await v.locator(".zoom-v").textContent()) === "125%", "zoom did not change");
+  await v.getByRole("tab", { name: "חתך" }).click();
+  await v.getByText("עין הנהג").waitFor();
+  await v.getByRole("tab", { name: "תלת־ממד" }).click();
+  await v.locator(".axo-stack").waitFor({ timeout: 3000 });
+  await page.waitForTimeout(600);
+  await v.screenshot({ path: SHOTS + "viewer-axo.png" });
+  await v.getByRole("tab", { name: "תכנית" }).click();
+  await page.getByTestId("check-roads.parking.1").hover();
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: SHOTS + "chapter-roads-1600.png", fullPage: true });
+  assert(await page.locator(".viewer").count() >= 2, "expected viewers for each illustrated item");
+  assert(errors.length === 0, "console errors: " + errors.join(" | "));
+  await ctx.close();
+});
+
+await test("בדיקת תכנית: דוגמה מסמנת רמזור, וטעינת CSV מעדכנת", async () => {
+  const { page, ctx } = await newPage({ viewport: { width: 1440, height: 1000 } });
+  await page.goto(BASE + "/#/check");
+  await page.getByTestId("check-example").click();
+  const status = (id) => page.getByTestId(`check-row-${id}`).getAttribute("data-status");
+  assert(await status("parking_regular") === "warn", "parking should be warn");
+  assert(await status("generators") === "bad", "generator should be bad");
+  assert(await status("pit_volume") === "ok", "pit should be ok");
+  await page.locator('input[type=file]').setInputFiles({ name: "plan.csv", mimeType: "text/csv", buffer: Buffer.from("id,value\nparking_regular,72\ngenerators,1\n") });
+  await page.getByTestId("toast").waitFor();
+  assert(await status("parking_regular") === "ok", "parking not updated from CSV");
+  assert(await status("generators") === "ok", "generator not updated from CSV");
+  await page.waitForTimeout(800);
+  await page.screenshot({ path: SHOTS + "check.png", fullPage: true });
   await ctx.close();
 });
 

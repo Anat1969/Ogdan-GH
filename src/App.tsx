@@ -8,6 +8,7 @@ import Contacts from "./pages/Contacts";
 import Home from "./pages/Home";
 import NotFound from "./pages/NotFound";
 import Project from "./pages/Project";
+import Check from "./pages/Check";
 import { ToolPage, ToolsIndex } from "./pages/Tools";
 import { href, useRoute, useSharedStateImport, type Route } from "./state/router";
 
@@ -19,6 +20,7 @@ function View({ route }: { route: Route }) {
     case "tools": return <ToolsIndex />;
     case "contacts": return <Contacts />;
     case "project": return <Project />;
+    case "check": return <Check />;
     default: return <NotFound />;
   }
 }

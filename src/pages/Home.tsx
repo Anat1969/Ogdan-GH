@@ -48,7 +48,7 @@ function Tower({ active, setActive, progress }: { active: string | null; setActi
           return (
             <motion.div
               key={c.id}
-              className={`slab st-${progress[c.id].ratio > 0 ? statusOf(progress[c.id].ratio) : "idle"} ${lifted ? "on" : ""} ${active && !lifted ? "dim" : ""}`}
+              className={`slab tone-${c.tone} st-${progress[c.id].ratio > 0 ? statusOf(progress[c.id].ratio) : "idle"} ${lifted ? "on" : ""} ${active && !lifted ? "dim" : ""}`}
               initial={reduce ? false : { z: 400, opacity: 0 }}
               animate={{ z: i * 26 + (lifted ? 18 : 0), opacity: 1 }}
               transition={{ delay: reduce ? 0 : 0.15 + i * 0.07, type: "spring", stiffness: 120, damping: 16 }}
@@ -128,7 +128,7 @@ export default function Home() {
               const i = chapters.indexOf(c);
               return (
                 <li key={c.id}>
-                  <a href={href({ name: "chapter", id: c.id })} className={`st-${statusOf(progress[c.id].ratio)} ${active === c.id ? "on" : ""}`} onMouseEnter={() => setActive(c.id)} onMouseLeave={() => setActive(null)} onFocus={() => setActive(c.id)} onBlur={() => setActive(null)}>
+                  <a href={href({ name: "chapter", id: c.id })} className={`tone-${c.tone} st-${statusOf(progress[c.id].ratio)} ${active === c.id ? "on" : ""}`} onMouseEnter={() => setActive(c.id)} onMouseLeave={() => setActive(null)} onFocus={() => setActive(c.id)} onBlur={() => setActive(null)}>
                     <span className="mono">{String(i + 1).padStart(2, "0")}</span>
                     <span>{c.short}</span>
                     <span className="mono muted">{progress[c.id].total ? `${progress[c.id].done}/${progress[c.id].total}` : "מידע"}</span>
@@ -188,9 +188,9 @@ export default function Home() {
           {chapters.map((c, i) => (
             <a key={c.id} className={`card-link tone-${c.tone} tick`} href={href({ name: "chapter", id: c.id })} data-testid={`chapter-card-${c.id}`}>
               <IconBox name={chapterIcon[c.id]} />
-              <span className="label" style={{ display: "block" }}>פרק {String(i + 1).padStart(2, "0")}</span>
+              <span className="label" style={{ display: "block" }}>אגף {String(i + 1).padStart(2, "0")}</span>
               <span className="go" aria-hidden="true">←</span>
-              <h3>{c.title}</h3>
+              <h3>{String(i + 1).padStart(2, "0")} {c.title}</h3>
               <p>{c.description}</p>
               <div style={{ marginTop: 14 }}>
                 {progress[c.id].total > 0 ? (
