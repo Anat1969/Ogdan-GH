@@ -1,0 +1,31 @@
+# CLAUDE.md
+
+לפני כל עבודה: לקרוא את הקובץ הזה ואת `.claude/skills/anat-app-builder/SKILL.md`.
+
+## הפרויקט
+אוגדן הנחיות מידע להיתר לעורכי בקשה, עיריית אשדוד (נוסח 01/01/2025), כאפליקציית עבודה.
+גרסה 1 נבנתה ב-Lovable (פרויקט "פרויקט: הנחיות להיתר - אוגדן", architools-insight.lovable.app). גרסה 2 היא כתיבה מחדש בריפו הזה, עם שמירה מלאה על הנתונים ועל נוסחאות המחשבונים.
+
+## A&I logo button
+The top bar holds only the app name (links home), content navigation, and ONE logo button "אד' ענת שטיבלמן A&I" (`<ai-menu>` from https://appofapp-gh.vercel.app/ai-menu.js). Every editing and development action (העתקת קישור, שיחת הפיתוח, פרויקט המחקר, התקנת האפליקציה, edit mode, add, delete) lives only inside it, never as loose buttons. Standard: https://github.com/Anat1969/AppOfApp-GH/blob/main/docs/ai-menu-standard.md
+כשהסקריפט החיצוני לא נטען (רשת חסומה, לא מקוון), `src/components/shell.tsx` מציג תחליף מקומי עם אותם פריטים ואותה התנהגות סגירה.
+
+## כללים לפרויקט הזה
+- כל תוכן מקצועי יושב ב-`src/data/permitData.ts`. אין טקסט מקצועי ברכיבי UI.
+- כל נוסחה יושבת ב-`src/logic/calculators.ts`, עם בדיקת יחידה ב-`calculators.test.ts`. שינוי מקדם מחייב עדכון בדיקה.
+- נתוני הפרויקט של המשתמש (שטח מגרש, יח"ד וכו') נשמרים פעם אחת ב-`projectStore`. מחשבון לא מחזיק state משלו לשדות משותפים.
+- מפתח פריט ברשימת דרישות: `chapterId.blockId.index`. שינוי סדר פריטים מזיז סימונים שמורים, לכן מוסיפים בסוף.
+
+## יומן תיקונים
+- 2026-11-02: גרסה 2. כתיבה מחדש מ-Lovable: מבנה נתונים מרכזי, תיק בקשה משותף לכל המחשבונים, רשימות דרישות נשמרות, חיפוש בכל האוגדן, מודל תלת־ממדי בדף הבית, דוח להדפסה, PWA, 13 בדיקות Playwright ו-12 בדיקות יחידה.
+
+## למדנו בבנייה
+- `.hero` גנרי התנגש עם `.metric.hero` והגביה כל מדד ראשי ל-86vh. נתפס רק בצילום מסך. שמות פריסה של דף מקבלים קידומת.
+- אנימציית `width` מ-0 עם `whileInView` לא מתחילה, כי אלמנט ברוחב 0 לא נצפה. מנפישים `scaleX`.
+- בדיקות Playwright שבודקות סגירת תפריט צריכות לחכות ל-detached, כי AnimatePresence משאיר את האלמנט בזמן היציאה.
+- `pkill -f "vite preview"` בתוך פקודת bash הורג גם את המעטפת עצמה. סוגרים לפי PID.
+
+## נקודות פתוחות בנתוני המקור (לא תוקנו, דורשות אימות מול העירייה)
+- IBAN של לאומי חשבון 700100/04 מופיע במקור כ-`ILl07109320000070010004` (אות l קטנה).
+- כתובת האגרות מופיעה כ-`agrot@asdod.muni.il` (חסרה h לעומת שאר הכתובות `ashdod`).
+- IBAN של דיסקונט קצר מהשאר (22 תווים).
