@@ -48,7 +48,7 @@ export function paramScene(tool: string, p: Project, k: KMap): Scene3 | null {
       const trees = Math.min(r.trees, 40);
       const prims: Prim[] = [...s.prims];
       for (let i = 0; i < trees; i++) prims.push({ t: "tree", at: [-s.side / 2 + 2 + (i % 6) * 2.8, -s.side / 2 + 3 + Math.floor(i / 6) * 3.2], h: 5, grow: true });
-      return { ground: [s.side * 1.6, s.side * 1.6], prims, callouts: [], labels: [...(s.labels ?? []), { at: [-s.side / 2 + 8, 7, -s.side / 2 + 3], text: `${r.trees} עצים בוגרים` }, { at: [0, 1, s.side / 2 - 2], text: `שטח ירוק נדרש ${f(r.minGreen)} מ"ר` }] };
+      return { ground: [s.side * 1.6, s.side * 1.6], prims, callouts: [], labels: [...(s.labels ?? []), { at: [-s.side / 2 + 2 + Math.min(trees, 6) * 1.4, 6.5, -s.side / 2 + 3 + Math.floor((trees - 1) / 6) * 1.6], text: `${r.trees} עצים בוגרים` }, { at: [0, 1, s.side / 2 - 2], text: `שטח ירוק נדרש ${f(r.minGreen)} מ"ר` }] };
     }
     case "parking": {
       const r = calcParking(p.parking, p.standard, k);
@@ -132,19 +132,22 @@ export function paramScene(tool: string, p: Project, k: KMap): Scene3 | null {
       const r = calcProgramByUnits(p.units, k);
       if (!r) return null;
       const items = r.rows.filter((x) => x.unit === 'מ"ר' && x.value > 0);
+      const kindOf = (g: string) => (g === "חינוך" ? "glass" : g === "שטחים פתוחים" ? "green" : g === "מבני ציבור" ? "tone" : "pad");
+      // פריסה ברשת: תא בגודל המבנה הגדול ביותר, כדי שהמבנים לא יעלו זה על זה
+      const sides = items.map((it) => Math.max(2, Math.sqrt(it.value) * 0.6));
+      const cell = Math.max(...sides) + 5;
+      const cols = Math.ceil(Math.sqrt(items.length * 1.5));
+      const rows = Math.ceil(items.length / cols);
+      const ox = ((cols - 1) * cell) / 2, oz = ((rows - 1) * cell) / 2;
       const prims: Prim[] = [];
       const labels: Scene3["labels"] = [];
-      let x = 0;
-      const kindOf = (g: string) => (g === "חינוך" ? "glass" : g === "שטחים פתוחים" ? "green" : g === "מבני ציבור" ? "tone" : "pad") as Prim extends { kind: infer K } ? K : never;
       items.forEach((it, i) => {
-        const side = Math.max(2, Math.sqrt(it.value) * 0.6);
-        const z = (i % 2) * 22;
-        if (i % 2 === 0 && i) x += side + 6;
+        const cx = (i % cols) * cell - ox, cz = Math.floor(i / cols) * cell - oz;
         const h = it.group === "שטחים פתוחים" ? 0.2 : it.group === "חינוך" ? 6 : 4;
-        prims.push({ t: "box", at: [x, z], size: [side, h, side], kind: kindOf(it.group) as never, grow: h > 1 });
-        labels.push({ at: [x, h + 1.5, z], text: `${i + 1} ${it.label} · ${f(it.value)} מ"ר` });
+        prims.push({ t: "box", at: [cx, cz], size: [sides[i], h, sides[i]], kind: kindOf(it.group) as never, grow: h > 1 });
+        labels.push({ at: [cx, h + 1.2, cz], text: `${i + 1}` });
       });
-      return { ground: [x + 30, 60], prims: prims.map((pr) => pr.t === "box" ? { ...pr, at: [pr.at[0] - x / 2, pr.at[1] - 11] as [number, number] } : pr), labels: labels!.map((l) => ({ ...l, at: [l.at[0] - x / 2, l.at[1], l.at[2] - 11] as V3 })), callouts: [] };
+      return { ground: [cols * cell + 10, rows * cell + 10], prims, labels, callouts: [], key: items.map((it, i) => `${i + 1} ${it.label} · ${f(it.value)} מ"ר`) };
     }
     case "devob": {
       const r = calcDevObligation(p.plot, p.units, k);

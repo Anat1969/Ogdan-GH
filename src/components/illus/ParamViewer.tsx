@@ -1,4 +1,4 @@
-import { Suspense, lazy, useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { KDEFS } from "../../logic/constants";
 import { toolDocs } from "../../data/toolDocs";
@@ -33,6 +33,36 @@ export function ParamViewer({ tool }: { tool: string }) {
     saved.current = null;
     setDemo(null);
   };
+  // תוויות במודל לא עולות זו על זו: כל תווית שחופפת לקודמת יורדת מתחתיה. רץ שוב כשהמצלמה זזה
+  const stage = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = stage.current;
+    if (!el) return;
+    const fix = () => {
+      const ls = [...el.querySelectorAll<HTMLElement>(".l3")];
+      // המיקום הבסיסי = המיקום הנוכחי פחות ההזזה שכבר הוחלה, כדי לא לאפס ולהבהב
+      const items = ls.map((l) => {
+        const cur = Number(l.dataset.dy || 0);
+        const b = l.getBoundingClientRect();
+        return { l, cur, r: new DOMRect(b.left, b.top - cur, b.width, b.height) };
+      }).sort((a, b) => a.r.top - b.r.top || a.r.left - b.r.left);
+      const placed: DOMRect[] = [];
+      for (const { l, cur, r } of items) {
+        let dy = 0;
+        for (let guard = 0; guard < 12; guard++) {
+          const hit = placed.find((p) => r.left < p.right + 3 && p.left - 3 < r.right && r.top + dy < p.bottom + 2 && p.top - 2 < r.bottom + dy);
+          if (!hit) break;
+          dy = hit.bottom - r.top + 3;
+        }
+        if (dy !== cur) { l.dataset.dy = String(dy); l.style.transform = dy ? `translateY(${dy}px)` : ""; }
+        placed.push(new DOMRect(r.left, r.top + dy, r.width, r.height));
+      }
+    };
+    fix();
+    const id = window.setInterval(fix, 250);
+    return () => window.clearInterval(id);
+  }, [scene]);
+
   const st = demo !== null ? steps[Math.min(demo, steps.length - 1)] : null;
 
   return (
@@ -45,7 +75,7 @@ export function ParamViewer({ tool }: { tool: string }) {
           : <button type="button" className="btn sm" onClick={() => endDemo(false)} data-testid="demo-end">סיום, החזרת הנתונים שלי</button>}
       </header>
       <div className="pviewer-body">
-        <div className="viewer-stage is3d">
+        <div className="viewer-stage is3d" ref={stage}>
           {scene ? (
             <Suspense fallback={<div className="viewer-loading">טוען מודל</div>}>
               <Scene3D id={tool} scene={scene} active={null} />
@@ -81,6 +111,7 @@ export function ParamViewer({ tool }: { tool: string }) {
           <Legend kinds={["mass", "plot", "dim", "green", "water", "tone"]} />
         </aside>
       </div>
+      {scene?.key && <ol className="viewer-key" aria-label="מפתח מספרים במודל">{scene.key.map((t) => <li key={t}><span>{t}</span></li>)}</ol>}
       <figcaption className="viewer-cap">גלגלת: זום · גרירה: סיבוב. מידות בבורדו. המודל מתעדכן עם כל שינוי בטופס.</figcaption>
     </figure>
   );

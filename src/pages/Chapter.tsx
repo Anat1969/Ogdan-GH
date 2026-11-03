@@ -204,7 +204,7 @@ function BlockView2({ chapter, block, index, chNo }: { chapter: Ch; block: Block
   );
   if (block.kind === "tool") {
     return (
-      <div className="ws-split" data-testid={`row-${chapter.id}-${index}`}>
+      <div className="ws-split tool-row" data-testid={`row-${chapter.id}-${index}`}>
         <div className="ws-scroll">{frame}</div>
         <ParamViewer tool={block.tool} />
       </div>

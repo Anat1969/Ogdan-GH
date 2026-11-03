@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { allChecklistKeys, checklistBlocks, chapters, itemKey, permitTracks, source } from "../data/permitData";
 import { calcDrainage, calcFee, calcGreen, calcParking, calcWaste, calcWater } from "../logic/calculators";
 import { href } from "../state/router";
@@ -14,6 +14,7 @@ export default function Project() {
   const p = useProject();
   const k = useK();
   const checks = useChecks();
+  const [rtab, setRtab] = useState(0);
   useEffect(() => { document.title = "תיק הבקשה · אוגדן הנחיות להיתר"; }, []);
 
   const parking = calcParking(p.parking, p.standard, k);
@@ -69,6 +70,12 @@ export default function Project() {
               <div className="muted">לפי {source.title}, נוסח {source.version}</div>
             </div>
           </header>
+          <nav className="ws-tabs ws-tabs-quiet rtabs no-print" role="tablist" aria-label="חלקי הדוח">
+            {["סיכום", "כמויות מהמחשבונים", "דרישות פתוחות והערות"].map((t, i) => (
+              <button key={t} type="button" role="tab" className="ws-tab" aria-selected={rtab === i} aria-pressed={rtab === i} onClick={() => setRtab(i)} data-testid={`rtab-${i}`}><span className="mono ws-tab-no">{i + 1}</span><span className="ws-tab-t">{t}</span></button>
+            ))}
+          </nav>
+          <div className={`rtab ${rtab === 0 ? "on" : ""}`}>
 
           <div className="grid g4" style={{ marginBottom: 20 }}>
             <Metric hero v={`${done}/${total}`} k="דרישות שסומנו" n={`${Math.round((done / total) * 100)}% מהתיק`} />
@@ -110,6 +117,8 @@ export default function Project() {
             </div>
           </div>
 
+          </div>
+          <div className={`rtab ${rtab === 1 ? "on" : ""}`}>
           <h3 style={{ fontSize: 18, fontWeight: 500, marginBottom: 8 }}>כמויות מהמחשבונים</h3>
           <div className="table-wrap" style={{ marginBottom: 24 }}>
             <table>
@@ -125,10 +134,12 @@ export default function Project() {
             </table>
           </div>
 
+          </div>
+          <div className={`rtab ${rtab === 2 ? "on" : ""}`}>
           <h3 style={{ fontSize: 18, fontWeight: 500, marginBottom: 8 }}>מוכנות לפי פרק</h3>
-          <div className="stack" style={{ gap: 12 }}>
+          <div className="open-grid">
             {per.filter((x) => x.keys.length).map(({ c, keys, done: d, open }) => (
-              <div key={c.id} className={`tone-${c.tone}`} style={{ borderInlineStart: "3px solid var(--tone)", paddingInlineStart: 12 }}>
+              <div key={c.id} className="open-ch">
                 <div className="spread" style={{ marginBottom: 6 }}>
                   <a href={href({ name: "chapter", id: c.id })} style={{ fontWeight: 500, textDecoration: "none" }}>{c.title}</a>
                   <span className="mono" style={{ fontSize: 13 }}>{d}/{keys.length}</span>
@@ -145,6 +156,7 @@ export default function Project() {
           </div>
 
           <NotesReport />
+          </div>
           <p className="muted" style={{ fontSize: 12, marginTop: 24, borderTop: "1px solid var(--rule)", paddingTop: 12 }}>
             הדוח הוא כלי עזר לעורך הבקשה. החישובים הם אומדן לפי מקדמי האוגדן ותקנים מקובלים, ואינם מחליפים את בדיקת מחלקת הרישוי, היועצים ואיש המקצוע החותם.
           </p>

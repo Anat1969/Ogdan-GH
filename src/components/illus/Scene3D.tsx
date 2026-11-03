@@ -1,8 +1,8 @@
 // רינדור המודלים התלת־ממדיים (React Three Fiber). נטען בטעינה עצלה רק כשבוחרים "תלת־ממד".
 // מצלמה אורתוגרפית אקסונומטרית, חומרים מט עם קווי מתאר, צל רך, צמיחה בכניסה, והנפשה לפי המושג.
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Edges, Html, Line, OrbitControls } from "@react-three/drei";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { scenes3d, type Anim, type Kind, type Prim, type Scene3, type V3 } from "./scenes3d";
 import { toneOf } from "../../design/tone";
@@ -197,6 +197,21 @@ function Content({ scene, pal, active, reduced }: { scene: Scene3; pal: Pal; act
   );
 }
 
+/** זום שמתאים את המודל לגודל המסגרת: כל המגרש נראה, גם במסגרת צרה. מתעדכן כשהמסגרת משנה גודל */
+function FitZoom({ span }: { span: number }) {
+  const { camera, size } = useThree();
+  const last = useRef("");
+  useEffect(() => {
+    const key = `${size.width}x${size.height}x${span}`;
+    if (last.current === key) return;
+    last.current = key;
+    // הקרנה אקסונומטרית: אלכסון המגרש ברוחב, וחצי ממנו בגובה, ועוד גובה המבנים
+    camera.zoom = Math.max(2, Math.min(size.width / (span * 1.5), size.height / (span * 1.15)));
+    camera.updateProjectionMatrix();
+  }, [camera, size.width, size.height, span]);
+  return null;
+}
+
 export default function Scene3D({ id, scene: given, active, tone }: { id: string; scene?: Scene3 | null; active: number | null; tone?: string }) {
   const scene = given ?? scenes3d[id];
   const reduced = typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -206,6 +221,7 @@ export default function Scene3D({ id, scene: given, active, tone }: { id: string
   const dir = new THREE.Vector3(-0.62, 0.55, 0.62).normalize().multiplyScalar(120);
   return (
     <Canvas shadows orthographic dpr={[1, 2]} gl={{ antialias: true, alpha: true }} camera={{ position: dir.toArray(), zoom: 520 / span, near: -500, far: 1000 }} style={{ width: "100%", height: "100%" }}>
+      <FitZoom span={span} />
       <OrbitControls enableDamping makeDefault enableZoom zoomSpeed={0.9} minZoom={2} maxZoom={200} maxPolarAngle={Math.PI / 2.05} />
       <Content scene={scene} pal={pal} active={active} reduced={reduced} />
     </Canvas>

@@ -127,6 +127,9 @@ await test("תיק בקשה: פרויקט לדוגמה ממלא את הדוח ו
   await report.getByText("עומד").first().waitFor();
   assert(await report.locator(".ring").count() === 10, "expected 10 readiness rings");
   assert(await report.locator(".gantt-row.mine").count() === 1, "selected track not marked");
+  assert(await report.locator("tr", { hasText: "חניה" }).first().isHidden(), "quantities should be in their own tab");
+  await page.getByTestId("rtab-1").click();
+  await report.locator("tr", { hasText: "חניה" }).first().waitFor();
   const parkingRow = await report.locator("tr", { hasText: "חניה" }).first().textContent();
   assert(/\d+ חניות/.test(parkingRow), "parking row missing value");
   await page.waitForTimeout(1200);
@@ -365,6 +368,7 @@ await test("v6: מודל מהנתונים, דוגמה מונחית, תרשים �
   await page.getByTestId("links").locator("summary").click();
   assert(await page.locator(".links-pop a").count() >= 3, "links missing");
   await page.goto(BASE + "/#/project");
+  await page.getByTestId("rtab-2").click();
   await page.getByTestId("notes-report").getByText("נדרש תיאום רחבה").waitFor();
   await page.goto(BASE + "/#/chapter/roads"); await page.getByTestId("tab-0").click();
   await page.locator(".ws-split .checklist li").nth(1).hover();
@@ -391,6 +395,25 @@ await test("גריד אחיד: בלי גלילת דף ב-1440×900 וב-1280×80
     assert(new Set(heads).size === 1, `header top differs between pages: ${heads.join(",")}`);
     await ctx.close();
   }
+});
+
+await test("טקסט לא יוצא ממסגרת: מדדים ושלבי חישוב במחשבונים, תוויות במודל לא חופפות", async () => {
+  const { page, ctx } = await newPage({ viewport: { width: 1280, height: 800 } });
+  await page.goto(BASE + "/#/project");
+  await page.getByTestId("load-example").click();
+  for (const t of ["drainage", "water", "program", "mamad", "green", "fireAccess"]) {
+    await page.goto(BASE + "/#/tool/" + t);
+    await page.waitForTimeout(1400);
+    const bad = await page.evaluate(() => [...document.querySelectorAll("main .metric, main .metric .v, main .calc-steps li, main .preqs li")].filter((e) => e.scrollWidth > e.clientWidth + 2).map((e) => e.textContent.trim().slice(0, 30)));
+    assert(bad.length === 0, `${t}: text overflows: ${bad.join(" | ")}`);
+    const overlap = await page.evaluate(() => {
+      const st = document.querySelector(".pviewer .viewer-stage").getBoundingClientRect();
+      const r = [...document.querySelectorAll(".pviewer .l3")].map((e) => e.getBoundingClientRect()).filter((b) => b.top >= st.top && b.bottom <= st.bottom && b.left >= st.left && b.right <= st.right);
+      let n = 0; for (let i = 0; i < r.length; i++) for (let j = i + 1; j < r.length; j++) { const a = r[i], c = r[j]; if (a.left < c.right && c.left < a.right && a.top < c.bottom && c.top < a.bottom) n++; } return n;
+    });
+    assert(overlap === 0, `${t}: ${overlap} 3D labels overlap`);
+  }
+  await ctx.close();
 });
 
 await test("דף שלא קיים מציג הודעה ברורה", async () => {
