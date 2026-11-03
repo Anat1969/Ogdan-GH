@@ -6,6 +6,8 @@ export interface ContactPerson {
   role: string;
   phone: string;
   email: string;
+  /** אימות מול אתרי העירייה. בלי שדה: הנתון מהאוגדן (01/2025) ולא אומת */
+  checked?: { status: "confirmed" | "changed" | "notfound"; date: string; source?: string; note?: string };
 }
 
 export type ToolId = "parking" | "fee" | "waste" | "drainage" | "green" | "water" | "program" | "levies" | "mamad" | "fireAccess";

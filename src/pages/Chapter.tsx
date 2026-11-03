@@ -200,6 +200,19 @@ function BlockView2({ chapter, block, index, chNo }: { chapter: Ch; block: Block
   return <div className="ws-scroll ws-full" data-testid={`row-${chapter.id}-${index}`}>{frame}</div>;
 }
 
+/** מצב אימות של איש קשר מול אתרי העירייה */
+export function ContactCheck({ p }: { p: Ch["contacts"][number] }) {
+  const c = p.checked;
+  const st = !c ? "idle" : c.status === "confirmed" ? "ok" : c.status === "changed" ? "warn" : "idle";
+  const label = !c ? "מהאוגדן 01/2025, לא אומת" : c.status === "confirmed" ? `אומת ${c.date}` : c.status === "changed" ? `עודכן ${c.date}` : `לא נמצא באתר העירייה ${c.date}`;
+  return (
+    <span className="bcard-check" title={[c?.note, c?.source].filter(Boolean).join(" · ") || "הנתון לקוח מהאוגדן ולא נבדק מול אתר העירייה"}>
+      <Light status={st}>{label}</Light>
+      {c?.source && <a href={c.source} target="_blank" rel="noreferrer">מקור</a>}
+    </span>
+  );
+}
+
 /** כרטיסי ביקור של העובדים */
 export function BusinessCards({ chapter }: { chapter: Ch }) {
   const toast = useToast();
@@ -219,6 +232,7 @@ export function BusinessCards({ chapter }: { chapter: Ch }) {
           <article key={p.name + p.phone} className="bcard" data-testid="person">
             <span className="num-badge mono">{i + 1}</span>
             <div className="bcard-who"><b>{p.name}</b><span>{p.role}</span></div>
+            <ContactCheck p={p} />
             <div className="bcard-acts">
               <a className="bcard-line mono" href={`tel:${p.phone.replace(/-/g, "")}`}><Icon name="phone" size={13} /><span className="ltr">{p.phone}</span></a>
               {p.email && <button type="button" className="bcard-line" onClick={async () => toast((await copyText(p.email)) ? `הועתק: ${p.email}` : "ההעתקה נכשלה")}><Icon name="mail" size={13} /><span className="ltr">{p.email}</span></button>}

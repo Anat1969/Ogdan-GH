@@ -922,3 +922,7 @@ body { font-size: clamp(15px, 0.35vw + 13.6px, 17px); }
 .track-bar i { background: linear-gradient(90deg, var(--gray-dark), var(--gray-mid)); }
 .gantt-row.mine .gantt-bar i { background: var(--ink); }
 .home-hero h1 strong { color: var(--ink); font-weight: 500; }
+.bcard-check { display: flex; gap: 8px; align-items: center; font-size: 11px; color: var(--gray-dark); }
+.bcard-check .light { font-size: 11px; gap: 5px; }
+.bcard-check .light i { width: 7px; height: 7px; box-shadow: none; }
+.bcard-check a { color: var(--gray-dark); }
