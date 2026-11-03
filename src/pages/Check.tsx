@@ -1,153 +1,209 @@
-import { motion, useReducedMotion } from "framer-motion";
-import { Fragment, useEffect, useRef } from "react";
+// בדיקת תוכנית בינוי לפי מספר: דוח התאמה לגורמי העירייה, שרטוטים, ובדיקה מספרית.
+// מיועד לפורום היועצים לתוכניות בינוי. הנתונים: חוות הדעת והשדות של התוכנית (PLANS-GH).
+import { useEffect, useMemo, useRef, useState } from "react";
+import plansData from "../data/plans.json";
 import { chapters } from "../data/permitData";
-import { parsePlanFile, planTemplateCsv, runPlanCheck, type CheckStatus } from "../logic/planCheck";
+import { reviewPlan, verdictLabel, type PlanRecord, type Verdict } from "../logic/planReview";
 import { href } from "../state/router";
-import { exampleProject, projectStore, updateProject, useProject } from "../state/store";
+import { updateProject, useK } from "../state/store";
 import { Icon } from "../components/icons";
-import { PageHead, useToast } from "../components/ui";
-import { Light, Ring } from "../components/viz";
+import { Progress, useToast } from "../components/ui";
+import { Ring } from "../components/viz";
+import { NumericCheck } from "./CheckNumeric";
 
-const label: Record<CheckStatus, string> = { ok: "עומד", warn: "חסר עד 10%", bad: "חסר", idle: "לא נבדק" };
-const fmt = (n: number | null, d = 2) => (n === null ? "—" : n.toLocaleString("he-IL", { maximumFractionDigits: d }));
+const plans = (plansData as { plans: PlanRecord[] }).plans;
+const vStatus: Record<Verdict, "ok" | "bad" | "warn" | "idle"> = { ok: "ok", bad: "bad", missing: "bad", review: "warn" };
+const pad = (n: number) => String(n).padStart(2, "0");
+const catLabel: Record<string, string> = { tashrit: "תשריט", landscape: "פיתוח ונוף", render: "הדמיה", aerial: "צילום אוויר" };
 
-function download(name: string, text: string, type: string) {
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([text], { type }));
-  a.download = name;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-}
-
-/** פס השוואה: דרישה מול מוצע */
-function Compare({ required, proposed, status }: { required: number | null; proposed: number | null; status: CheckStatus }) {
-  const reduce = useReducedMotion();
-  if (required === null || proposed === null) return <span className="muted" style={{ fontSize: 12 }}>—</span>;
-  const max = Math.max(required, proposed, 0.0001);
+/** צופה תמונה: גלגלת לזום, גרירה להזזה */
+function ImagePan({ src, alt }: { src: string; alt: string }) {
+  const [z, setZ] = useState(1);
+  const [p, setP] = useState({ x: 0, y: 0 });
+  const box = useRef<HTMLDivElement>(null);
+  const drag = useRef<{ x: number; y: number; px: number; py: number } | null>(null);
+  useEffect(() => { setZ(1); setP({ x: 0, y: 0 }); }, [src]);
+  useEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const w = (e: WheelEvent) => { e.preventDefault(); setZ((v) => Math.min(6, Math.max(0.5, v * (e.deltaY < 0 ? 1.15 : 1 / 1.15)))); };
+    el.addEventListener("wheel", w, { passive: false });
+    return () => el.removeEventListener("wheel", w);
+  }, []);
   return (
-    <div className={`cmp st-${status}`} aria-hidden="true">
-      <motion.i className="cmp-p" style={{ transformOrigin: "right" }} initial={reduce ? false : { scaleX: 0 }} animate={{ scaleX: 1, width: `${(proposed / max) * 100}%` }} transition={{ duration: 0.6 }} />
-      <span className="cmp-r" style={{ insetInlineStart: `${(required / max) * 100}%` }} />
+    <div ref={box} className="imgpan" onPointerDown={(e) => { (e.target as Element).setPointerCapture?.(e.pointerId); drag.current = { x: e.clientX, y: e.clientY, px: p.x, py: p.y }; }}
+      onPointerMove={(e) => { const d = drag.current; if (d) setP({ x: d.px + e.clientX - d.x, y: d.py + e.clientY - d.y }); }}
+      onPointerUp={() => (drag.current = null)} onDoubleClick={() => { setZ(1); setP({ x: 0, y: 0 }); }}>
+      <img src={src} alt={alt} draggable={false} style={{ transform: `translate(${p.x}px, ${p.y}px) scale(${z})` }} />
+      <span className="imgpan-z mono">{Math.round(z * 100)}%</span>
     </div>
   );
 }
 
-export default function Check() {
-  const p = useProject();
-  const toast = useToast();
-  const file = useRef<HTMLInputElement>(null);
-  useEffect(() => { document.title = "בדיקת תכנית · אוגדן הנחיות להיתר"; }, []);
-  const checks = runPlanCheck(p);
-  const tested = checks.filter((c) => c.status !== "idle");
-  const ok = tested.filter((c) => c.status === "ok").length;
-  const counts = { ok, warn: tested.filter((c) => c.status === "warn").length, bad: tested.filter((c) => c.status === "bad").length, idle: checks.length - tested.length };
-  const groups = [...new Set(checks.map((c) => c.group))];
-  const noBase = !p.plot && !p.units && !p.parking.some((e) => e.units);
-  let row = 0;
-
-  const setProp = (id: string, v: string) => updateProject({ proposed: { ...(p.proposed ?? {}), [id]: v } });
-
+function Report({ plan }: { plan: PlanRecord }) {
+  const k = useK();
+  const r = useMemo(() => reviewPlan(plan, k), [plan, k]);
+  const st = r.counts.bad + r.counts.missing ? "bad" : r.counts.review ? "warn" : "ok";
+  const shot = plan.images.find((i) => i.cat === "tashrit") ?? plan.images[0];
   return (
-    <div>
-      <PageHead
-        crumbs={[{ label: "בית", route: { name: "home" } }, { label: "בדיקת תכנית" }]}
-        label="חיבור האוגדן לתכנית הבינוי"
-        title="בדיקת תכנית מול האוגדן"
-        icon="compare"
-        lead="מזינים את הערכים שמופיעים בתכנית הבינוי (או טוענים קובץ טבלת שטחים), והמערכת משווה כל ערך לדרישה שחושבה במחשבונים. ירוק עומד, כתום חסר עד 10%, אדום חסר."
-      >
-        <div className="row" style={{ marginTop: 8 }}>
-          <input ref={file} type="file" accept=".csv,.txt,.json,.tsv" hidden onChange={async (e) => {
-            const f = e.target.files?.[0];
-            if (!f) return;
-            try {
-              const vals = parsePlanFile(await f.text());
-              const n = Object.keys(vals).length;
-              if (!n) { toast("לא נמצאו בקובץ ערכים מוכרים. השתמשו בתבנית להורדה"); return; }
-              updateProject({ proposed: { ...(p.proposed ?? {}), ...vals } });
-              toast(`נטענו ${n} ערכים מהתכנית`);
-            } catch { toast("הקובץ לא נקרא. נדרש CSV של מזהה,ערך או JSON"); }
-            e.target.value = "";
-          }} />
-          <button type="button" className="btn primary" onClick={() => file.current?.click()} data-testid="plan-upload"><Icon name="upload" size={16} />טעינת קובץ מהתכנית</button>
-          <button type="button" className="btn" onClick={() => download("ogdan-plan-template.csv", "﻿" + planTemplateCsv(), "text/csv;charset=utf-8")}><Icon name="download" size={16} />תבנית CSV</button>
-          <button type="button" className="btn" onClick={() => download("ogdan-project.json", JSON.stringify(projectStore.get(), null, 2), "application/json")}><Icon name="download" size={16} />ייצוא תיק הבקשה</button>
-          {noBase && <button type="button" className="btn" onClick={() => projectStore.set(exampleProject())} data-testid="check-example">טעינת דוגמה</button>}
+    <article className="a4 report2" data-testid="plan-report">
+      <header className="r2-head">
+        <div>
+          <span className="label">דוח התאמה לדרישות גורמי העירייה · פורום יועצים לתוכניות בינוי</span>
+          <h2>תב/{plan.num} · {plan.name}</h2>
+          <p className="muted">{plan.decision && `החלטה: ${plan.decision}`}{plan.committeeDate && ` · ועדה ${new Date(plan.committeeDate).toLocaleDateString("he-IL")}`}{plan.fields.zoningDetailed && ` · תב"ע ${plan.fields.zoningDetailed}`}</p>
         </div>
-      </PageHead>
+        <div className="r2-score">
+          <Ring value={r.score} label="רמת התאמה" sub={`${r.counts.ok} תואם · ${r.counts.review} לבדיקה · ${r.counts.missing + r.counts.bad} חסר/לא תואם`} size={88} status={st} />
+        </div>
+      </header>
 
-      {noBase && (
-        <p className="frame-explain" style={{ marginBottom: 16 }}>
-          כדי לחשב דרישות צריך קודם נתוני בסיס (שטח מגרש, יח"ד, שימושים) ב<a href={href({ name: "project" })}>תיק הבקשה</a>. בלי הם השורות יישארו "לא נבדק".
-        </p>
-      )}
+      <section className="r2-grid">
+        <div className="r2-facts">
+          {[
+            ["יח\"ד בתוכנית", r.facts.units ?? "לא צוין"],
+            ["קומות מעל 0.00", r.facts.floors ?? "לא צוין"],
+            ["חניות נדרשות לפי האוגדן", r.parkingRequired ?? "חסר יח\"ד"],
+            ["שטח מחלחל", r.facts.infiltrationPct !== null ? `${r.facts.infiltrationPct}%` : "לא צוין"],
+            ["רחבות כיבוי", r.facts.fireStaging ?? "לא צוין"],
+            ["הקלות מבוקשות", r.facts.reliefs.length],
+          ].map(([kk, v]) => <div key={kk as string}><span>{kk}</span><b className="mono">{v}</b></div>)}
+        </div>
+        {shot && <img className="plan-shot" src={shot.file} alt={shot.title} />}
+      </section>
 
-      <div className="split check-split">
-        <section className="frame">
-          <header className="frame-head">
-            <span className="frame-num mono">1</span>
-            <div><h3>ערכים מהתכנית מול הדרישה</h3><p className="frame-explain">כל שורה: הערך שבתכנית, הדרישה מהמחשבון, הפער וההסבר. הפס מראה את המוצע, והקו האנכי את הדרישה.</p></div>
-          </header>
-          <div className="table-wrap">
-            <table className="check-table">
-              <thead><tr><th>#</th><th>בדיקה</th><th>בתכנית</th><th>נדרש</th><th>השוואה</th><th>מצב</th></tr></thead>
-              <tbody>
-                {groups.map((g) => (
-                  <Fragment key={g}>
-                    <tr className="group-row"><td colSpan={6}>{g}</td></tr>
-                    {checks.filter((c) => c.group === g).map((c) => {
-                      row++;
-                      const ch = chapters.find((x) => x.id === c.chapter)!;
-                      return (
-                        <tr key={c.id} data-testid={`check-row-${c.id}`} data-status={c.status}>
-                          <td className="num">{row}</td>
-                          <td>
-                            <a href={href({ name: "chapter", id: c.chapter })} style={{ textDecoration: "none" }}>{c.label}</a>
-                            <div className="muted" style={{ fontSize: 12 }}>{c.basis} · {ch.short}</div>
-                          </td>
-                          <td style={{ minWidth: 96 }}>
-                            <input className="input sm" type="number" inputMode="decimal" min={0} value={p.proposed?.[c.id] ?? ""} onChange={(e) => setProp(c.id, e.target.value)} aria-label={`${c.label}, ערך בתכנית`} data-testid={`prop-${c.id}`} />
-                          </td>
-                          <td className="num">{fmt(c.required)} <span className="muted" style={{ fontSize: 11 }}>{c.unit}</span></td>
-                          <td style={{ minWidth: 110 }}><Compare required={c.required} proposed={c.proposed} status={c.status} /></td>
-                          <td><Light status={c.status}>{label[c.status]}{c.gap !== null && c.gap < 0 ? ` (${fmt(c.gap)})` : ""}</Light></td>
-                        </tr>
-                      );
-                    })}
-                  </Fragment>
-                ))}
-              </tbody>
-            </table>
-          </div>
+      <table className="r2-table">
+        <thead><tr><th>#</th><th>גורם ונושא</th><th>מצב</th><th>ממצא</th><th>מה לעשות</th></tr></thead>
+        <tbody>
+          {r.findings.map((f, i) => {
+            const ch = chapters.find((c) => c.id === f.chapter);
+            return (
+              <tr key={f.id} data-verdict={f.verdict}>
+                <td className="num">{i + 1}</td>
+                <td><b>{f.topic}</b><div className="muted">{ch ? `${pad(chapters.indexOf(ch) + 1)} ${ch.short}` : ""}</div></td>
+                <td><span className={`light st-${vStatus[f.verdict]}`}><i />{verdictLabel[f.verdict]}</span></td>
+                <td>{f.finding}{f.evidence && <q className="r2-q">{f.evidence}</q>}</td>
+                <td>{f.action || "—"}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+
+      {r.facts.reliefs.length > 0 && (
+        <section className="r2-reliefs">
+          <b>הקלות שהוזכרו</b>
+          <ol>{r.facts.reliefs.slice(0, 5).map((x, i) => <li key={i}>{x.slice(0, 160)}</li>)}</ol>
         </section>
+      )}
+      <footer className="r2-foot muted">
+        הבדיקה מזהה התייחסות, מספרים ואישורים בחוות הדעת ובשדות התוכנית, ומשווה למקדמי האוגדן. היא כלי עזר לפורום היועצים ואינה מחליפה את בדיקת הגורם המקצועי. מקור הנתונים: תיק תוכנית הבינוי במערכת התוכניות של העירייה. הופק {new Date().toLocaleDateString("he-IL")}.
+      </footer>
+    </article>
+  );
+}
 
-        <aside className="frame">
-          <header className="frame-head">
-            <span className="frame-num mono">2</span>
-            <div><h3>תמונת מצב</h3><p className="frame-explain">כמה מהבדיקות עומדות בדרישה, ומה עוד חסר. מתעדכן בכל הקלדה.</p></div>
-          </header>
-          <div style={{ display: "grid", justifyItems: "center", gap: 16 }}>
-            <Ring value={tested.length ? ok / tested.length : 0} label="עומד בדרישות" sub={`${ok} מתוך ${tested.length} שנבדקו`} size={150} status={!tested.length ? "idle" : counts.bad ? "bad" : counts.warn ? "warn" : "ok"} />
-            <div className="status-bar" aria-label="פילוח מצבים">
-              {(["ok", "warn", "bad", "idle"] as const).map((s) => counts[s] > 0 && (
-                <motion.i key={s} className={`st-${s}`} initial={{ flexGrow: 0 }} animate={{ flexGrow: counts[s] }} transition={{ duration: 0.6 }} title={`${label[s]}: ${counts[s]}`} />
-              ))}
+export default function Check() {
+  const toast = useToast();
+  const [q, setQ] = useState("");
+  const [num, setNum] = useState<string | null>(null);
+  const [tab, setTab] = useState(0);
+  const [img, setImg] = useState(0);
+  useEffect(() => { document.title = "בדיקת תוכנית בינוי · אוגדן הנחיות להיתר"; }, []);
+  const plan = plans.find((p) => p.num === num) ?? null;
+  const open = (v: string) => {
+    const n = v.replace(/\D/g, "");
+    const p = plans.find((x) => x.num === n);
+    if (p) { setNum(p.num); setTab(0); setImg(0); } else toast(`תוכנית תב/${n || "?"} לא נמצאה. קיימות ${plans.length} תוכניות במערכת`);
+  };
+  const tabs = ["דוח התאמה", "שרטוטים והדמיות", "בדיקה מספרית"];
+  return (
+    <div className="ws ws-check">
+      <header className="ws-head">
+        <span className="iconbox ws-icon" aria-hidden="true"><Icon name="compare" size={24} /></span>
+        <div className="ws-title">
+          <nav className="crumbs"><a href={href({ name: "home" })}>בית</a><span>/</span><span>בדיקת תוכנית בינוי</span></nav>
+          <h1>בדיקת תוכנית בינוי</h1>
+          <p className="muted">רושמים מספר תוכנית, והמערכת מעלה את הנתונים והשרטוטים, בודקת התאמה לדרישות כל גורם ומפיקה דוח.</p>
+        </div>
+        <form className="ws-meta plan-search" onSubmit={(e) => { e.preventDefault(); open(q); }}>
+          <label className="field" style={{ minWidth: 220 }}>
+            <span>מספר תוכנית בינוי</span>
+            <div className="row" style={{ flexWrap: "nowrap" }}>
+              <span className="mono muted">תב/</span>
+              <input className="input" list="plan-list" value={q} onChange={(e) => setQ(e.target.value)} placeholder="1815" inputMode="numeric" data-testid="plan-num" />
+              <button className="btn primary" type="submit" data-testid="plan-go">בדיקה</button>
             </div>
-            <div className="row" style={{ justifyContent: "center", gap: 16 }}>
-              {(["ok", "warn", "bad", "idle"] as const).map((s) => <Light key={s} status={s}>{label[s]} <b className="mono">{counts[s]}</b></Light>)}
+            <datalist id="plan-list">{plans.map((p) => <option key={p.num} value={p.num}>{p.name}</option>)}</datalist>
+          </label>
+        </form>
+      </header>
+
+      <nav className="ws-tabs" role="tablist">
+        {tabs.map((t, i) => (
+          <button key={t} type="button" role="tab" className="ws-tab" aria-selected={tab === i} aria-pressed={tab === i} onClick={() => setTab(i)} disabled={i < 2 && !plan}>
+            <span className="mono ws-tab-no">{i + 1}</span><span className="ws-tab-t">{t}</span>
+          </button>
+        ))}
+      </nav>
+
+      <div className="ws-body ws-body-1">
+        <div className="ws-main">
+          {tab === 2 ? (
+            <div className="ws-scroll"><NumericCheck /></div>
+          ) : !plan ? (
+            <div className="ws-scroll">
+              <div className="plan-pick">
+                <p className="muted">בחרו תוכנית מהרשימה או הקלידו מספר:</p>
+                <div className="plan-grid">
+                  {plans.map((p) => (
+                    <button key={p.num} type="button" className="plan-card" onClick={() => { setQ(p.num); open(p.num); }} data-testid={`plan-${p.num}`}>
+                      {p.images[0] ? <img src={p.images[0].file} alt="" loading="lazy" /> : <span className="plan-card-ph" />}
+                      <b className="mono">תב/{p.num}</b>
+                      <span>{p.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
-            {tested.filter((c) => c.status === "bad" || c.status === "warn").length > 0 && (
-              <ol className="numlist" style={{ width: "100%" }}>
-                {tested.filter((c) => c.status === "bad" || c.status === "warn").map((c, i) => (
-                  <li key={c.id}><span className="num-badge mono">{i + 1}</span><span><Light status={c.status}>{c.label}</Light><span className="muted" style={{ display: "block", fontSize: 12 }}>בתכנית {fmt(c.proposed)}, נדרש {fmt(c.required)} {c.unit}</span></span></li>
-                ))}
-              </ol>
-            )}
-            <p className="muted" style={{ fontSize: 12 }}>
-              קובץ: CSV עם שורות "מזהה,ערך" (אפשר גם את שם הבדיקה בעברית), או JSON. קריאה ישירה של DWG או PDF עדיין לא נתמכת: מייצאים את טבלת השטחים מהשרטוט ל-CSV.
-            </p>
-          </div>
-        </aside>
+          ) : tab === 0 ? (
+            <div className="ws-scroll">
+              <div className="row no-print" style={{ marginBottom: 10 }}>
+                <button type="button" className="btn primary" onClick={() => window.print()}><Icon name="print" size={16} />הדפסת הדוח (A4)</button>
+                <button type="button" className="btn" onClick={() => {
+                  const r = reviewPlan(plan);
+                  updateProject({ name: `תב/${plan.num} ${plan.name}`, address: plan.fields.parcel ?? "", units: r.facts.units ? String(r.facts.units) : "", floors: r.facts.floors ? String(r.facts.floors) : "" });
+                  toast("נתוני התוכנית נטענו לתיק הבקשה ולמחשבונים");
+                }}>טעינה לתיק הבקשה</button>
+              </div>
+              <Report plan={plan} />
+            </div>
+          ) : (
+            <div className="ws-split">
+              <div className="ws-scroll">
+                <section className="frame">
+                  <header className="frame-head"><span className="frame-num mono">2</span><div><h3>שרטוטים והדמיות</h3><p className="frame-explain">מתוך תיק התוכנית. גלגלת לזום, גרירה להזזה, לחיצה כפולה לאיפוס.</p></div></header>
+                  <ol className="numlist">
+                    {plan.images.map((im, i) => (
+                      <li key={im.file}>
+                        <button type="button" className={`btn sm ${i === img ? "is-active" : ""}`} aria-pressed={i === img} onClick={() => setImg(i)} style={{ width: "100%", justifyContent: "flex-start", whiteSpace: "normal", textAlign: "start" }}>
+                          <span className="num-badge mono">{i + 1}</span>{catLabel[im.cat] ?? im.cat}: {im.title}
+                        </button>
+                      </li>
+                    ))}
+                  </ol>
+                  {!plan.images.length && <p className="muted">אין שרטוטים בתיק התוכנית.</p>}
+                  <div style={{ marginTop: 12 }}><Progress value={plan.images.length ? (img + 1) / plan.images.length : 0} label="שרטוט" /></div>
+                </section>
+              </div>
+              <figure className="viewer">
+                <header className="viewer-bar"><b className="viewer-title">{plan.images[img] ? `${catLabel[plan.images[img].cat] ?? ""}: ${plan.images[img].title}` : "אין תמונה"}</b></header>
+                {plan.images[img] && <ImagePan src={plan.images[img].file} alt={plan.images[img].title} />}
+                <figcaption className="viewer-cap">מקור: {plan.images[img]?.source}{plan.images[img]?.page ? `, עמוד ${plan.images[img].page}` : ""}</figcaption>
+              </figure>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

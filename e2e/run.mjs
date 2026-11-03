@@ -71,6 +71,7 @@ await test("כל קישורי הסרגל העליון נפתחים, הסרגל �
 await test("סימון דרישה מעדכן התקדמות ונשמר אחרי רענון", async () => {
   const { page, ctx } = await newPage({ viewport: { width: 1280, height: 900 } });
   await page.goto(BASE + "/#/chapter/licensing");
+  await page.getByTestId("tab-2").click();
   await page.waitForTimeout(800);
   await page.screenshot({ path: SHOTS + "chapter-before.png" });
   await page.getByTestId("check-licensing.graphic.0").click();
@@ -79,6 +80,7 @@ await test("סימון דרישה מעדכן התקדמות ונשמר אחרי 
   assert((await page.getByTestId("chapter-progress").textContent()) === "2/9", "progress not 2/9");
   await page.reload();
   assert((await page.getByTestId("chapter-progress").textContent()) === "2/9", "progress not persisted");
+  await page.getByTestId("tab-2").click();
   await page.screenshot({ path: SHOTS + "chapter-licensing.png", fullPage: true });
   await ctx.close();
 });
@@ -230,6 +232,7 @@ await test("התקנה מ-Chrome: manifest תקין ו-getInstallabilityErrors �
 await test("מסגרת המחשה: מעבר על דרישה מדגיש את המספר בשרטוט, זום ולשוניות תכנית/חתך/תלת־ממד", async () => {
   const { page, ctx, errors } = await newPage({ viewport: { width: 1600, height: 1000 } });
   await page.goto(BASE + "/#/chapter/roads");
+  await page.getByTestId("tab-1").click();
   const v = page.getByTestId("viewer-parking");
   await v.waitFor();
   await page.getByTestId("check-roads.parking.1").hover();
@@ -239,14 +242,14 @@ await test("מסגרת המחשה: מעבר על דרישה מדגיש את המ
   await v.getByRole("tab", { name: "חתך" }).click();
   await v.getByText("עין הנהג").waitFor();
   await v.getByRole("tab", { name: "תלת־ממד" }).click();
-  await v.locator(".axo-stack").waitFor({ timeout: 3000 });
-  await page.waitForTimeout(600);
-  await v.screenshot({ path: SHOTS + "viewer-axo.png" });
+  await v.locator("canvas").waitFor({ timeout: 8000 });
+  await page.waitForTimeout(3500);
+  await v.screenshot({ path: SHOTS + "viewer-3d.png" });
   await v.getByRole("tab", { name: "תכנית" }).click();
   await page.getByTestId("check-roads.parking.1").hover();
   await page.waitForTimeout(500);
   await page.screenshot({ path: SHOTS + "chapter-roads-1600.png", fullPage: true });
-  assert(await page.locator(".viewer").count() >= 2, "expected viewers for each illustrated item");
+  assert(await page.locator(".ws-cards .bcard").count() === 5, "expected 5 business cards");
   assert(errors.length === 0, "console errors: " + errors.join(" | "));
   await ctx.close();
 });
@@ -254,6 +257,7 @@ await test("מסגרת המחשה: מעבר על דרישה מדגיש את המ
 await test("בדיקת תכנית: דוגמה מסמנת רמזור, וטעינת CSV מעדכנת", async () => {
   const { page, ctx } = await newPage({ viewport: { width: 1440, height: 1000 } });
   await page.goto(BASE + "/#/check");
+  await page.getByRole("tab", { name: /בדיקה מספרית/ }).click();
   await page.getByTestId("check-example").click();
   const status = (id) => page.getByTestId(`check-row-${id}`).getAttribute("data-status");
   assert(await status("parking_regular") === "warn", "parking should be warn");
@@ -304,9 +308,34 @@ await test("ממ\"ד, כבאות ופרוגרמה: מחשבונים חדשים �
   await page.getByText("אוכלוסייה צפויה").waitFor();
   await page.waitForTimeout(800);
   await page.screenshot({ path: SHOTS + "program.png", fullPage: true });
-  for (const id of ["fire", "hfc", "program", "water"]) { await page.goto(BASE + "/#/chapter/" + id); await page.locator("main h1").first().waitFor(); }
-  await page.goto(BASE + "/#/chapter/fire"); await page.waitForTimeout(800);
+  for (const id of ["fire", "hfc", "program", "water"]) { await page.goto(BASE + "/#/chapter/" + id); await page.locator(".ws-title h1").first().waitFor(); }
+  await page.goto(BASE + "/#/chapter/fire"); await page.getByTestId("tab-1").click(); await page.waitForTimeout(800);
   await page.screenshot({ path: SHOTS + "chapter-fire.png", fullPage: true });
+  assert(errors.length === 0, "console errors: " + errors.join(" | "));
+  await ctx.close();
+});
+
+await test("בדיקת תוכנית לפי מספר: תב/1815 מעלה דוח התאמה ושרטוטים", async () => {
+  const { page, ctx, errors } = await newPage({ viewport: { width: 1600, height: 1000 } });
+  await page.goto(BASE + "/#/check");
+  await page.getByTestId("plan-num").fill("1815");
+  await page.getByTestId("plan-go").click();
+  const rep = page.getByTestId("plan-report");
+  await rep.getByText("תב/1815").first().waitFor();
+  assert(await rep.locator('tr[data-verdict]').count() === 11, "expected 11 findings");
+  assert(await rep.locator('tr[data-verdict="missing"]').count() >= 1, "expected missing approvals");
+  await rep.getByText(/תשתיות/).first().waitFor();
+  await page.waitForTimeout(900);
+  await page.screenshot({ path: SHOTS + "plan-report.png", fullPage: true });
+  await page.emulateMedia({ media: "print" });
+  await page.screenshot({ path: SHOTS + "plan-report-print.png", fullPage: true });
+  const pdf = await page.pdf({ format: "A4", printBackground: true, preferCSSPageSize: true });
+  const pages = (pdf.toString("latin1").match(/\/Type\s*\/Page[^s]/g) || []).length;
+  assert(pages === 1, `report should print on one A4 page, got ${pages}`);
+  await page.emulateMedia({ media: "screen" });
+  await page.getByRole("tab", { name: /שרטוטים/ }).click();
+  await page.locator(".imgpan img").waitFor();
+  await page.screenshot({ path: SHOTS + "plan-images.png" });
   assert(errors.length === 0, "console errors: " + errors.join(" | "));
   await ctx.close();
 });

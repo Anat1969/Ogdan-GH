@@ -4,8 +4,7 @@ import { blockMeta } from "../data/explain";
 import { href } from "../state/router";
 import { setChecks, toggleCheck, updateProject, useChecks, useProject } from "../state/store";
 import { toolComponents } from "../components/tools";
-import { CheckMark, PageHead, Progress, Stamp, copyText, useToast } from "../components/ui";
-import { ContactList } from "./Contacts";
+import { CheckMark, Progress, Stamp, copyText, useToast } from "../components/ui";
 import NotFound from "./NotFound";
 import { Icon, chapterIcon } from "../components/icons";
 import { Viewer } from "../components/illus/Viewer";
@@ -180,8 +179,8 @@ const titleOf = (b: Block) => {
   }
 };
 
-/** סעיף עם המחשה: מסגרת טקסט + מסגרת המחשה */
-function BlockRow({ chapter, block, index, chNo }: { chapter: Ch; block: Block; index: number; chNo: number }) {
+/** סעיף פעיל: מסגרת טקסט + מסגרת המחשה, באותו מקום תמיד */
+function BlockView2({ chapter, block, index, chNo }: { chapter: Ch; block: Block; index: number; chNo: number }) {
   const [active, setActive] = useState<number | null>(null);
   const meta = blockMeta[`${chapter.id}.${index}`];
   const num = `${pad(chNo)}.${index + 1}`;
@@ -192,19 +191,50 @@ function BlockRow({ chapter, block, index, chNo }: { chapter: Ch; block: Block; 
   );
   if (meta?.illus) {
     return (
-      <div className="split" data-testid={`row-${chapter.id}-${index}`}>
-        {frame}
+      <div className="ws-split" data-testid={`row-${chapter.id}-${index}`}>
+        <div className="ws-scroll">{frame}</div>
         <Viewer id={meta.illus} active={active} tone={chapter.tone} />
       </div>
     );
   }
-  return frame;
+  return <div className="ws-scroll ws-full" data-testid={`row-${chapter.id}-${index}`}>{frame}</div>;
+}
+
+/** כרטיסי ביקור של העובדים */
+export function BusinessCards({ chapter }: { chapter: Ch }) {
+  const toast = useToast();
+  if (!chapter.contacts.length) {
+    return (
+      <aside className="ws-cards" aria-label="אנשי קשר">
+        <header className="ws-cards-head"><b>אנשי קשר</b><span className="muted">{chapter.department}</span></header>
+        <p className="muted" style={{ fontSize: 13 }}>באוגדן לא צוינו אנשי קשר לאגף זה. לבירורים: מחלקת הרישוי.</p>
+      </aside>
+    );
+  }
+  return (
+    <aside className="ws-cards" aria-label="כרטיסי ביקור">
+      <header className="ws-cards-head"><b>כרטיסי ביקור</b><span className="muted">{chapter.department}</span>{chapter.hours && <span className="muted" style={{ fontSize: 11.5 }}>{chapter.hours}</span>}</header>
+      <div className="bcards">
+        {chapter.contacts.map((p, i) => (
+          <article key={p.name + p.phone} className="bcard" data-testid="person">
+            <span className="num-badge mono">{i + 1}</span>
+            <div className="bcard-who"><b>{p.name}</b><span>{p.role}</span></div>
+            <div className="bcard-acts">
+              <a className="bcard-line mono" href={`tel:${p.phone.replace(/-/g, "")}`}><Icon name="phone" size={13} /><span className="ltr">{p.phone}</span></a>
+              {p.email && <button type="button" className="bcard-line" onClick={async () => toast((await copyText(p.email)) ? `הועתק: ${p.email}` : "ההעתקה נכשלה")}><Icon name="mail" size={13} /><span className="ltr">{p.email}</span></button>}
+            </div>
+          </article>
+        ))}
+      </div>
+    </aside>
+  );
 }
 
 export default function Chapter({ id }: { id: string }) {
   const chapter = chapters.find((c) => c.id === id);
   const checks = useChecks();
-  useEffect(() => { if (chapter) document.title = `${chapter.title} · אוגדן הנחיות להיתר`; }, [chapter]);
+  const [tab, setTab] = useState(0);
+  useEffect(() => { setTab(0); if (chapter) document.title = `${chapter.title} · אוגדן הנחיות להיתר`; }, [chapter]);
   if (!chapter) return <NotFound />;
   const idx = chapters.indexOf(chapter);
   const chNo = idx + 1;
@@ -212,69 +242,67 @@ export default function Chapter({ id }: { id: string }) {
   const next = chapters[idx + 1];
   const keys = allChecklistKeys(chapter);
   const done = keys.filter((k) => checks[k]).length;
+  const cur = Math.min(tab, chapter.blocks.length - 1);
+  const lu = landUse(chapter.tone);
 
-  // סעיפים עם המחשה או כלי תופסים שורה מלאה; סעיפים קצרים מסודרים בזוגות כדי לנצל את רוחב המסך
-  const rows: ReactNode[] = [];
-  let pair: ReactNode[] = [];
-  const flush = () => { if (pair.length) { rows.push(<div className="duo" key={`d${rows.length}`}>{pair}</div>); pair = []; } };
-  chapter.blocks.forEach((b, i) => {
-    const el = <BlockRow key={i} chapter={chapter} block={b} index={i} chNo={chNo} />;
-    if (blockMeta[`${chapter.id}.${i}`]?.illus || b.kind === "tool" || b.kind === "bank" || b.kind === "tracks") { flush(); rows.push(el); }
-    else { pair.push(el); if (pair.length === 2) flush(); }
-  });
-  flush();
+  const blockProgress = (b: Block) => {
+    if (b.kind !== "checklist") return null;
+    const ks = b.items.map((_, i) => itemKey(chapter.id, b.id, i));
+    return ks.filter((k) => checks[k]).length / ks.length;
+  };
 
   return (
-    <div className={`tone-${chapter.tone}`}>
-      <PageHead
-        tone={chapter.tone}
-        crumbs={[{ label: "בית", route: { name: "home" } }, { label: "פרקי האוגדן", route: { name: "home" } }, { label: `${pad(chNo)} ${chapter.short}` }]}
-        label={`אגף ${pad(chNo)} מתוך ${chapters.length} · ${chapter.department}`}
-        title={`${pad(chNo)}  ${chapter.title}`}
-        lead={chapter.description}
-        icon={chapterIcon[chapter.id]}
-      >
-        <div className="row" style={{ gap: 8 }}>
-          <span className="lu-chip" title={`${landUseSource.label}. ${landUseSource.status}`}>
-            <i style={{ background: landUse(chapter.tone).hex }} className={landUse(chapter.tone).hatched ? "hatched" : ""} />
-            צבע האגף לפי מקרא מבא"ת: {landUse(chapter.tone).name}{landUse(chapter.tone).code ? ` (${landUse(chapter.tone).code})` : ""}
-          </span>
+    <div className={`ws tone-${chapter.tone}`}>
+      <header className="ws-head">
+        <span className="iconbox ws-icon" aria-hidden="true"><Icon name={chapterIcon[chapter.id]} size={24} /></span>
+        <div className="ws-title">
+          <nav className="crumbs" aria-label="פירורי לחם"><a href={href({ name: "home" })}>בית</a><span aria-hidden="true">/</span><span>אגף {pad(chNo)} מתוך {chapters.length}</span></nav>
+          <h1><span className="mono ws-no">{pad(chNo)}</span> {chapter.title}</h1>
+          <p className="muted">{chapter.description}</p>
         </div>
-        <div className="head-meta">
+        <div className="ws-meta">
+          <span className="lu-chip" title={`${landUseSource.label}. ${landUseSource.status}`}>
+            <i style={{ background: "var(--tone)" }} className={lu.hatched ? "hatched" : ""} />
+            {lu.name}{lu.code ? ` · ${lu.code}` : ""}
+          </span>
           {keys.length > 0 && (
-            <div style={{ display: "grid", gap: 6, minWidth: 220, flex: "1 1 220px", maxWidth: 420 }}>
-              <div className="spread" style={{ fontSize: 13 }}><span className="muted">דרישות שסומנו באגף</span><span className="mono" data-testid="chapter-progress">{done}/{keys.length}</span></div>
+            <div className="ws-progress">
+              <div className="spread" style={{ fontSize: 12 }}><span className="muted">דרישות שסומנו</span><span className="mono" data-testid="chapter-progress">{done}/{keys.length}</span></div>
               <Progress value={done / keys.length} label="התקדמות באגף" />
             </div>
           )}
-          <nav className="toc" aria-label="סעיפי האגף">
-            {chapter.blocks.map((b, i) => <span key={i} className="toc-i"><span className="mono">{pad(chNo)}.{i + 1}</span> {titleOf(b)}</span>)}
-          </nav>
         </div>
-      </PageHead>
+      </header>
 
-      {chapter.contacts.length > 0 && (
-        <section className="frame contacts-strip">
-          <header className="frame-head">
-            <span className="frame-num mono">{pad(chNo)}.0</span>
-            <div><h3>אנשי קשר, {chapter.department}</h3>{chapter.hours && <p className="frame-explain">{chapter.hours}</p>}</div>
-          </header>
-          <div className="contacts-grid"><ContactList people={chapter.contacts} compact numbered /></div>
-        </section>
-      )}
-
-      <div className="rows">{rows}</div>
-
-      <nav className="grid g2" style={{ marginTop: 40 }} aria-label="מעבר בין אגפים">
-        {prev ? (
-          <a className={`card-link tone-${prev.tone} tick`} href={href({ name: "chapter", id: prev.id })}><span className="label">האגף הקודם</span><h3>{pad(idx)} {prev.title}</h3></a>
-        ) : <span />}
-        {next ? (
-          <a className={`card-link tone-${next.tone} tick`} href={href({ name: "chapter", id: next.id })} style={{ textAlign: "end" }}><span className="label">האגף הבא</span><h3>{pad(idx + 2)} {next.title}</h3></a>
-        ) : (
-          <a className="card-link" href={href({ name: "check" })} style={{ textAlign: "end" }}><span className="label">סיימתם לעבור על האוגדן</span><h3>לבדיקת התכנית מול האוגדן</h3></a>
-        )}
+      <nav className="ws-tabs" role="tablist" aria-label="סעיפי האגף"
+        onKeyDown={(e) => {
+          if (e.key === "ArrowLeft") setTab((t) => Math.min(chapter.blocks.length - 1, t + 1));
+          if (e.key === "ArrowRight") setTab((t) => Math.max(0, t - 1));
+        }}>
+        {chapter.blocks.map((b, i) => {
+          const pr = blockProgress(b);
+          return (
+            <button key={i} type="button" role="tab" aria-selected={i === cur} aria-pressed={i === cur} className="ws-tab" onClick={() => setTab(i)} data-testid={`tab-${i}`}>
+              <span className="mono ws-tab-no">{pad(chNo)}.{i + 1}</span>
+              <span className="ws-tab-t">{titleOf(b)}</span>
+              {pr !== null && <i className={`ws-tab-st st-${pr >= 1 ? "ok" : pr > 0 ? "warn" : "idle"}`} aria-label={`${Math.round(pr * 100)}% סומן`} />}
+            </button>
+          );
+        })}
       </nav>
+
+      <div className="ws-body">
+        <div className="ws-main" role="tabpanel" aria-label={titleOf(chapter.blocks[cur])}>
+          <BlockView2 key={`${chapter.id}-${cur}`} chapter={chapter} block={chapter.blocks[cur]} index={cur} chNo={chNo} />
+        </div>
+        <BusinessCards chapter={chapter} />
+      </div>
+
+      <footer className="ws-foot">
+        {prev ? <a className="btn sm" href={href({ name: "chapter", id: prev.id })}><Icon name="arrow" size={14} style={{ transform: "scaleX(-1)" }} />{pad(idx)} {prev.short}</a> : <span />}
+        <span className="muted mono" style={{ fontSize: 12 }}>סעיף {cur + 1} מתוך {chapter.blocks.length}</span>
+        {next ? <a className="btn sm" href={href({ name: "chapter", id: next.id })}>{pad(idx + 2)} {next.short}<Icon name="arrow" size={14} /></a> : <a className="btn sm primary" href={href({ name: "check" })}>לבדיקת תכנית<Icon name="arrow" size={14} /></a>}
+      </footer>
     </div>
   );
 }

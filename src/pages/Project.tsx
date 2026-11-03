@@ -77,7 +77,7 @@ export default function Project() {
         </Sheet>
 
         {/* הדוח */}
-        <section className="sheet report" aria-label="דוח תיק הבקשה" data-testid="report">
+        <section className="sheet report a4" aria-label="דוח תיק הבקשה" data-testid="report">
           <header className="spread" style={{ borderBottom: "2px solid var(--ink)", paddingBottom: 12, marginBottom: 20, alignItems: "flex-end" }}>
             <div>
               <span className="label">דוח תיק בקשה להיתר</span>

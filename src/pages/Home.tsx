@@ -8,6 +8,7 @@ import { Progress } from "../components/ui";
 import { IconBox, chapterIcon, toolIcon } from "../components/icons";
 import { CountUp, statusOf } from "../components/viz";
 import { landUse, landUseSource, landUses } from "../data/landuse";
+import { mutedTone } from "../design/tone";
 
 const totalReqs = chapters.reduce((s, c) => s + allChecklistKeys(c).length, 0);
 
@@ -220,7 +221,7 @@ export default function Home() {
             const lu = landUse(c.tone);
             return (
               <a key={c.id} className="lu-chip" href={href({ name: "chapter", id: c.id })} style={{ textDecoration: "none" }}>
-                <i style={{ background: lu.hex }} className={lu.hatched ? "hatched" : ""} />
+                <i style={{ background: mutedTone(lu.hex).fill }} className={lu.hatched ? "hatched" : ""} />
                 <b className="mono">{String(i + 1).padStart(2, "0")}</b> {c.short} <span className="muted">· {lu.name}</span>
               </a>
             );
@@ -230,7 +231,7 @@ export default function Home() {
           <summary><b>המקרא המלא</b><span className="muted">{landUseSource.status}</span></summary>
           <div className="doc-body">
             <div className="lu-legend">
-              {landUses.map((l) => <span key={l.key} className="lu-chip"><i style={{ background: l.hex }} className={l.hatched ? "hatched" : ""} />{l.name} <span className="muted mono">{l.code || ""} {l.hex}</span></span>)}
+              {landUses.map((l) => <span key={l.key} className="lu-chip"><i style={{ background: mutedTone(l.hex).fill }} className={l.hatched ? "hatched" : ""} />{l.name} <span className="muted mono">{l.code || ""} {l.hex}</span></span>)}
             </div>
             <p className="muted" style={{ fontSize: 12 }}>מקור: <a href={landUseSource.url} target="_blank" rel="noreferrer">{landUseSource.label}</a>.</p>
           </div>

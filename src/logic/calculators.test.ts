@@ -166,3 +166,31 @@ describe("מחשבונים נוספים", () => {
     expect(r.checks.find((c) => c.id === "facade")?.status).toBe("bad");
   });
 });
+
+import plansData from "../data/plans.json";
+import { extractFacts, reviewPlan, type PlanRecord } from "./planReview";
+
+describe("בדיקת תוכנית בינוי לפי מספר", () => {
+  const plans = (plansData as { plans: PlanRecord[] }).plans;
+  const p1815 = plans.find((p) => p.num === "1815")!;
+  it("תב/1815: 54 יח\"ד, 6 קומות, חסרים אישורי תשתיות, סביבה וחשמל", () => {
+    const f = extractFacts(p1815);
+    expect(f.units).toBe(54);
+    expect(f.floors).toBe(6);
+    expect(f.missingApprovals.join(" ")).toMatch(/תשתיות/);
+    expect(f.missingApprovals.join(" ")).toMatch(/חשמל/);
+    expect(f.reliefs.length).toBeGreaterThan(0);
+  });
+  it("תב/1815: אישורי גורמים חסר, חשמל דורש בדיקה, כבאות נמצא", () => {
+    const r = reviewPlan(p1815);
+    const by = Object.fromEntries(r.findings.map((x) => [x.id, x]));
+    expect(by.approvals.verdict).toBe("missing");
+    expect(by.electricity.verdict).toBe("review");
+    expect(by.fire.verdict).not.toBe("missing");
+    expect(r.parkingRequired).toBe(Math.ceil(54 * 1.2));
+  });
+  it("כל 16 התוכניות נבדקות בלי שגיאה", () => {
+    expect(plans.length).toBe(16);
+    for (const p of plans) expect(reviewPlan(p).findings.length).toBe(11);
+  });
+});

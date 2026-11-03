@@ -2,10 +2,10 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./design/app.css";
-import { landUses } from "./data/landuse";
+import { toneCss as buildToneCss } from "./design/tone";
 
-// צבעי האגפים נגזרים ממקרא ייעודי הקרקע (מקור אחד)
-const toneCss = landUses.map((l) => `.tone-${l.key}{--tone:${l.hex};--tone-fg:${l.fg}}`).join("");
+// צבעי האגפים נגזרים ממקרא ייעודי הקרקע (מקור אחד), בגוון מושקט
+const toneCss = buildToneCss();
 const style = document.createElement("style");
 style.dataset.source = "landuse";
 style.textContent = toneCss;
