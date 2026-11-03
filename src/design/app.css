@@ -1093,3 +1093,10 @@ body { font-size: clamp(15px, 0.35vw + 13.6px, 17px); }
 .viewer-key li .n { color: var(--gray-mid); }
 .viewer-key li.on { background: color-mix(in srgb, #f2d34f 35%, transparent); }
 .viewer-stage.focusing .viewer-canvas { transition: transform .45s ease; }
+/* v6: כותרת מחשבון קומפקטית, כדי שהטופס והמודל ייכנסו במסך אחד */
+.page-tool .page-head { padding-block: 4px 10px; margin-bottom: 10px; }
+.page-tool .page-head h1 { font-size: clamp(24px, 2.4vw, 34px); line-height: 1.1; }
+.page-tool .page-head .lead { font-size: 14px; margin-top: 2px; }
+.page-tool .page-head .iconbox { width: 40px !important; height: 40px !important; }
+.page-tool .page-head > .label { display: none; }
+@media (min-width: 1000px) { .tool-split { height: calc(100vh - 190px); } }

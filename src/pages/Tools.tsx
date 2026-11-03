@@ -36,7 +36,7 @@ export function ToolPage({ id }: { id: string }) {
   const c = chapters.find((x) => x.id === meta.chapter)!;
   const T = toolComponents[meta.id];
   return (
-    <div className={`tone-${c.tone}`}>
+    <div className={`page-tool tone-${c.tone}`}>
       <PageHead tone={c.tone} crumbs={[{ label: "בית", route: { name: "home" } }, { label: "כלים", route: { name: "tools" } }, { label: meta.title }]} label={`פרק ${c.short}`} title={meta.title} lead={meta.purpose} icon={toolIcon[meta.id]} />
       <div className="ws-split tool-split">
         <div className="ws-scroll"><Sheet tone={c.tone} label="מחובר לתיק הבקשה"><T /></Sheet></div>

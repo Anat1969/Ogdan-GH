@@ -60,14 +60,15 @@ export function Viewer({ id, active, tone, items, onActive }: { id: string; acti
       if (!c || !canvas) return;
       const sr = el.getBoundingClientRect();
       const cr = c.getBoundingClientRect();
-      const ccx = cr.left + cr.width / 2, ccy = cr.top + cr.height / 2;
+      const kr = canvas.getBoundingClientRect();
       const zf = 1.6;
+      const curZ = Number(getComputedStyle(canvas).transform.split(",")[0].replace("matrix(", "")) || 1;
       setPan((p0) => {
-        // מיקום הנקודה ביחס למרכז הבמה, בלי ההזזה הנוכחית
-        const curZ = Number(getComputedStyle(canvas).transform.split(",")[0].replace("matrix(", "")) || 1;
-        const dx = (ccx - (sr.left + sr.width / 2) - p0.x) / curZ;
-        const dy = (ccy - (sr.top + sr.height / 2) - p0.y) / curZ;
-        return { x: -dx * zf, y: -dy * zf };
+        // מרחק הנקודה ממרכז השרטוט, ביחידות לא מוגדלות; ואז הזזה כך שהנקודה תהיה במרכז המסגרת
+        const qx = (cr.left + cr.width / 2 - (kr.left + kr.width / 2)) / curZ;
+        const qy = (cr.top + cr.height / 2 - (kr.top + kr.height / 2)) / curZ;
+        const bx = kr.left + kr.width / 2 - p0.x, by = kr.top + kr.height / 2 - p0.y;
+        return { x: sr.left + sr.width / 2 - bx - zf * qx, y: sr.top + sr.height / 2 - by - zf * qy };
       });
       setZ(zf);
     }, 40);

@@ -237,6 +237,9 @@ await test("מסגרת המחשה: מעבר על דרישה מדגיש את המ
   await v.waitFor();
   await page.getByTestId("check-roads.parking.1").hover();
   assert(await v.locator(".callout.on text").textContent() === "2", "callout 2 not highlighted on hover");
+  await page.waitForTimeout(400);
+  assert((await v.locator(".zoom-v").textContent()) === "160%", "hover did not focus the drawing");
+  await page.mouse.move(5, 5); await page.waitForTimeout(300);
   await v.getByRole("button", { name: "התקרבות" }).click();
   assert((await v.locator(".zoom-v").textContent()) === "125%", "zoom did not change");
   await v.getByRole("tab", { name: "חתך" }).click();
@@ -350,11 +353,13 @@ await test("v6: מודל מהנתונים, דוגמה מונחית, תרשים �
   await page.screenshot({ path: SHOTS + "v6-tool-demo.png" });
   await page.getByTestId("demo-end").click();
   await page.goto(BASE + "/#/chapter/fire");
+  await page.getByTestId("tab-0").waitFor();
   const n = await page.locator(".ws-tab").count();
   await page.getByTestId(`tab-${n - 1}`).click();
   await page.getByTestId("flow").waitFor();
   await page.waitForTimeout(3200);
   await page.screenshot({ path: SHOTS + "v6-flow.png" });
+  await page.getByTestId("notes").locator("summary").click();
   await page.getByTestId("note-authority").fill("נדרש תיאום רחבה עם רשות הכבאות");
   await page.getByTestId("links").locator("summary").click();
   assert(await page.locator(".links-pop a").count() >= 3, "links missing");
