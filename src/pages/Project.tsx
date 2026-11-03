@@ -6,6 +6,7 @@ import { exampleProject, projectStore, updateProject, useChecks, useK, useProjec
 import { Metric, NumField, PageHead, Progress, Seg, Sheet, Stamp } from "../components/ui";
 import { Icon } from "../components/icons";
 import { Ring } from "../components/viz";
+import { NotesReport } from "../components/NotesReport";
 
 const fmt = (n: number, d = 0) => n.toLocaleString("he-IL", { maximumFractionDigits: d });
 
@@ -164,6 +165,7 @@ export default function Project() {
             ))}
           </div>
 
+          <NotesReport />
           <p className="muted" style={{ fontSize: 12, marginTop: 24, borderTop: "1px solid var(--rule)", paddingTop: 12 }}>
             הדוח הוא כלי עזר לעורך הבקשה. החישובים הם אומדן לפי מקדמי האוגדן ותקנים מקובלים, ואינם מחליפים את בדיקת מחלקת הרישוי, היועצים ואיש המקצוע החותם.
           </p>

@@ -155,7 +155,7 @@ function Prims({ scene, pal, clock }: { scene: Scene3; pal: Pal; clock: () => nu
               <Edges threshold={40} color={pal.edge} />
             </mesh>
           ) : (
-            <Line points={p.pts} color={p.kind === "limit" ? pal.limit : p.kind === "flow" ? "#6d97ad" : pal.edge} lineWidth={p.kind === "flow" ? 3 : 1.5} dashed={!!p.dashed} dashSize={0.8} gapSize={0.5} />
+            <Line points={p.pts} color={p.kind === "limit" || p.kind === "dim" ? pal.limit : p.kind === "flow" ? "#6d97ad" : pal.edge} lineWidth={p.kind === "flow" ? 2.5 : p.kind === "dim" ? 1.2 : 1} dashed={!!p.dashed} dashSize={0.8} gapSize={0.5} />
           );
         if (!isMover) return <group key={i}>{node}</group>;
         const base = p.t === "box" || p.t === "cyl" ? p.at : [0, 0];
@@ -183,6 +183,11 @@ function Content({ scene, pal, active, reduced }: { scene: Scene3; pal: Pal; act
       </mesh>
       <Prims scene={scene} pal={pal} clock={clock} />
       {(scene.anims ?? []).map((a, i) => a.kind === "rain" ? <Rain key={i} area={a.area} clock={clock} /> : a.kind === "flow" ? <Flow key={i} path={a.path} clock={clock} /> : null)}
+      {(scene.labels ?? []).map((l, i) => (
+        <Html key={`l${i}`} position={l.at} center zIndexRange={[20, 0]}>
+          <span className={`l3 ${l.dim ? "dim3" : ""}`}>{l.text}</span>
+        </Html>
+      ))}
       {scene.callouts.map((c) => (
         <Html key={c.n} position={c.at} center zIndexRange={[20, 0]}>
           <span className={`c3 ${active === c.n ? "on" : ""} ${active !== null && active !== c.n ? "dim" : ""}`}>{c.n}</span>
@@ -192,8 +197,8 @@ function Content({ scene, pal, active, reduced }: { scene: Scene3; pal: Pal; act
   );
 }
 
-export default function Scene3D({ id, active, tone }: { id: string; active: number | null; tone?: string }) {
-  const scene = scenes3d[id];
+export default function Scene3D({ id, scene: given, active, tone }: { id: string; scene?: Scene3 | null; active: number | null; tone?: string }) {
+  const scene = given ?? scenes3d[id];
   const reduced = typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
   const pal = useMemo(() => readPal(tone ?? ""), [tone]);
   if (!scene) return null;

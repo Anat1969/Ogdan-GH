@@ -8,7 +8,7 @@ import { uid, updateProject, useK, useProject } from "../state/store";
 import { Metric, NumField, Seg, Stamp, Steps } from "./ui";
 import { SitePlan, StackBar, Tank, Waffle } from "./viz";
 import { ToolShell } from "./ToolShell";
-import { FireAccessTool, LeviesTool, MamadTool, ProgramTool } from "./tools2";
+import { DevObligationTool, FireAccessTool, LeviesTool, MamadTool, ProgramTool } from "./tools2";
 
 const fmt = (n: number, d = 0) => n.toLocaleString("he-IL", { maximumFractionDigits: d });
 
@@ -377,6 +377,7 @@ export const toolComponents: Record<ToolId, () => JSX.Element> = {
   water: shell("water", WaterTool),
   program: shell("program", ProgramTool),
   levies: shell("levies", LeviesTool),
+  devob: shell("devob", DevObligationTool),
   mamad: shell("mamad", MamadTool),
   fireAccess: shell("fireAccess", FireAccessTool),
 };

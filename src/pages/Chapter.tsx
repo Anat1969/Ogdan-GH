@@ -1,13 +1,16 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { allChecklistKeys, bankAccounts, chapters, itemKey, paymentNote, permitTracks, tools, type Block, type Chapter as Ch } from "../data/permitData";
+import { allChecklistKeys, bankAccounts, chapters, generalLinks, itemKey, paymentNote, permitTracks, tools, type Block, type Chapter as Ch } from "../data/permitData";
 import { blockMeta } from "../data/explain";
 import { href } from "../state/router";
-import { setChecks, toggleCheck, updateProject, useChecks, useProject } from "../state/store";
+import { setChecks, setNote, toggleCheck, updateProject, useChecks, useProject } from "../state/store";
+import { flows } from "../data/flows";
+import { Flow } from "../components/illus/Flow";
 import { toolComponents } from "../components/tools";
 import { CheckMark, Progress, Stamp, copyText, useToast } from "../components/ui";
 import NotFound from "./NotFound";
 import { Icon, chapterIcon } from "../components/icons";
 import { Viewer } from "../components/illus/Viewer";
+import { ParamViewer } from "../components/illus/ParamViewer";
 import { Light } from "../components/viz";
 import { landUse, landUseSource } from "../data/landuse";
 
@@ -179,6 +182,16 @@ const titleOf = (b: Block) => {
   }
 };
 
+const itemsOf = (b: Block): string[] | undefined => {
+  switch (b.kind) {
+    case "checklist": case "notes": return b.items;
+    case "contactInfo": return b.lines;
+    case "cards": return b.cards.map((c) => c.title);
+    case "sources": return b.items.map((s) => s.title);
+    default: return undefined;
+  }
+};
+
 /** סעיף פעיל: מסגרת טקסט + מסגרת המחשה, באותו מקום תמיד */
 function BlockView2({ chapter, block, index, chNo }: { chapter: Ch; block: Block; index: number; chNo: number }) {
   const [active, setActive] = useState<number | null>(null);
@@ -189,11 +202,19 @@ function BlockView2({ chapter, block, index, chNo }: { chapter: Ch; block: Block
       <Body chapter={chapter} block={block} setActive={setActive} />
     </Frame>
   );
+  if (block.kind === "tool") {
+    return (
+      <div className="ws-split" data-testid={`row-${chapter.id}-${index}`}>
+        <div className="ws-scroll">{frame}</div>
+        <ParamViewer tool={block.tool} />
+      </div>
+    );
+  }
   if (meta?.illus) {
     return (
       <div className="ws-split" data-testid={`row-${chapter.id}-${index}`}>
         <div className="ws-scroll">{frame}</div>
-        <Viewer id={meta.illus} active={active} tone={chapter.tone} />
+        <Viewer id={meta.illus} active={active} tone={chapter.tone} items={itemsOf(block)} onActive={setActive} />
       </div>
     );
   }
@@ -210,6 +231,36 @@ export function ContactCheck({ p }: { p: Ch["contacts"][number] }) {
       <Light status={st}>{label}</Light>
       {c?.source && <a href={c.source} target="_blank" rel="noreferrer">מקור</a>}
     </span>
+  );
+}
+
+/** הערות לאגף: הגורם העירוני ויועץ היזם. נאספות לדוח */
+function ChapterNotes({ chapter }: { chapter: Ch }) {
+  const p = useProject();
+  const n = p.notes?.[chapter.id] ?? { authority: "", consultant: "" };
+  const count = [n.authority, n.consultant].filter((x) => x.trim()).length;
+  return (
+    <details className="ws-notes" open={count > 0} data-testid="notes">
+      <summary><b>הערות</b> <span className="muted">{count ? `${count} נכתבו, ייכנסו לדוח` : "ייכנסו לדוח"}</span></summary>
+      <label className="note-f"><span>הערות {chapter.department}</span>
+        <textarea rows={3} value={n.authority} onChange={(e) => setNote(chapter.id, "authority", e.target.value)} data-testid="note-authority" /></label>
+      <label className="note-f"><span>הערות יועץ היזם</span>
+        <textarea rows={3} value={n.consultant} onChange={(e) => setNote(chapter.id, "consultant", e.target.value)} data-testid="note-consultant" /></label>
+    </details>
+  );
+}
+
+/** כפתור קישורים לאגף: מקורות האגף וקישורים כלליים */
+function LinksButton({ chapter }: { chapter: Ch }) {
+  const own = chapter.blocks.flatMap((b) => (b.kind === "sources" ? b.items.filter((x) => x.url).map((x) => ({ title: x.title, url: x.url! })) : []));
+  const all = [...own, ...generalLinks];
+  return (
+    <details className="links-btn" data-testid="links">
+      <summary className="btn sm">קישורים <span className="mono">{all.length}</span></summary>
+      <ol className="links-pop">
+        {all.map((l, i) => <li key={l.url + i}><span className="mono n">{i + 1}</span><a href={l.url} target="_blank" rel="noreferrer">{l.title}</a></li>)}
+      </ol>
+    </details>
   );
 }
 
@@ -256,7 +307,10 @@ export default function Chapter({ id }: { id: string }) {
   const next = chapters[idx + 1];
   const keys = allChecklistKeys(chapter);
   const done = keys.filter((k) => checks[k]).length;
-  const cur = Math.min(tab, chapter.blocks.length - 1);
+  const flow = flows[chapter.id];
+  const nTabs = chapter.blocks.length + (flow ? 1 : 0);
+  const cur = Math.min(tab, nTabs - 1);
+  const isFlow = !!flow && cur === chapter.blocks.length;
   const lu = landUse(chapter.tone);
 
   const blockProgress = (b: Block) => {
@@ -275,6 +329,7 @@ export default function Chapter({ id }: { id: string }) {
           <p className="muted">{chapter.description}</p>
         </div>
         <div className="ws-meta">
+          <LinksButton chapter={chapter} />
           <span className="lu-chip" title={`${landUseSource.label}. ${landUseSource.status}`}>
             <i style={{ background: "var(--tone)" }} className={lu.hatched ? "hatched" : ""} />
             {lu.name}{lu.code ? ` · ${lu.code}` : ""}
@@ -290,7 +345,7 @@ export default function Chapter({ id }: { id: string }) {
 
       <nav className="ws-tabs" role="tablist" aria-label="סעיפי האגף"
         onKeyDown={(e) => {
-          if (e.key === "ArrowLeft") setTab((t) => Math.min(chapter.blocks.length - 1, t + 1));
+          if (e.key === "ArrowLeft") setTab((t) => Math.min(nTabs - 1, t + 1));
           if (e.key === "ArrowRight") setTab((t) => Math.max(0, t - 1));
         }}>
         {chapter.blocks.map((b, i) => {
@@ -303,18 +358,33 @@ export default function Chapter({ id }: { id: string }) {
             </button>
           );
         })}
+        {flow && (
+          <button type="button" role="tab" aria-selected={isFlow} aria-pressed={isFlow} className="ws-tab" onClick={() => setTab(chapter.blocks.length)} data-testid={`tab-${chapter.blocks.length}`}>
+            <span className="mono ws-tab-no">{pad(chNo)}.{chapter.blocks.length + 1}</span>
+            <span className="ws-tab-t">תרשים זרימה</span>
+          </button>
+        )}
       </nav>
 
       <div className="ws-body">
-        <div className="ws-main" role="tabpanel" aria-label={titleOf(chapter.blocks[cur])}>
-          <BlockView2 key={`${chapter.id}-${cur}`} chapter={chapter} block={chapter.blocks[cur]} index={cur} chNo={chNo} />
+        <div className="ws-main" role="tabpanel" aria-label={isFlow ? "תרשים זרימה" : titleOf(chapter.blocks[cur])}>
+          {isFlow ? (
+            <div className="ws-scroll ws-full ws-flow" data-testid={`row-${chapter.id}-flow`}>
+              <Flow key={chapter.id} nodes={flow.nodes} title={`${pad(chNo)}.${chapter.blocks.length + 1} ${flow.title}`} />
+            </div>
+          ) : (
+            <BlockView2 key={`${chapter.id}-${cur}`} chapter={chapter} block={chapter.blocks[cur]} index={cur} chNo={chNo} />
+          )}
         </div>
-        <BusinessCards chapter={chapter} />
+        <div className="ws-side">
+          <BusinessCards chapter={chapter} />
+          <ChapterNotes chapter={chapter} />
+        </div>
       </div>
 
       <footer className="ws-foot">
         {prev ? <a className="btn sm" href={href({ name: "chapter", id: prev.id })}><Icon name="arrow" size={14} style={{ transform: "scaleX(-1)" }} />{pad(idx)} {prev.short}</a> : <span />}
-        <span className="muted mono" style={{ fontSize: 12 }}>סעיף {cur + 1} מתוך {chapter.blocks.length}</span>
+        <span className="muted mono" style={{ fontSize: 12 }}>סעיף {cur + 1} מתוך {nTabs}</span>
         {next ? <a className="btn sm" href={href({ name: "chapter", id: next.id })}>{pad(idx + 2)} {next.short}<Icon name="arrow" size={14} /></a> : <a className="btn sm primary" href={href({ name: "check" })}>לבדיקת תכנית<Icon name="arrow" size={14} /></a>}
       </footer>
     </div>

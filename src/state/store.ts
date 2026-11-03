@@ -25,6 +25,10 @@ export interface Project {
   levies: LevyRow[];
   mamad: { l: string; w: string; h: string; wall: string; window: boolean };
   fire: { height: string; road: string; stagingL: string; stagingW: string; toFacade: string; hydrant: string };
+  /** הערות לכל אגף: של הגורם העירוני ושל יועץ היזם. נאספות לדוח */
+  notes?: Record<string, { authority: string; consultant: string }>;
+  /** טקסט קבועים שהמשתמש ערך: שם, יחידה ומקור */
+  kText?: Record<string, { label?: string; unit?: string; source?: string }>;
 }
 
 export interface ProgramRow { id: string; name: string; cohortPct: string; participation: string; perUnit: string; plotPerUnit: string; builtPerUnit: string }
@@ -196,6 +200,28 @@ export function useSavedAt() {
 
 export function updateProject(patch: Partial<Project>) {
   projectStore.set((p) => ({ ...p, ...patch }));
+}
+
+export function replaceProject(p: Project) {
+  projectStore.set(p);
+}
+
+export function setNote(chapterId: string, who: "authority" | "consultant", text: string) {
+  projectStore.set((p) => {
+    const cur = p.notes?.[chapterId] ?? { authority: "", consultant: "" };
+    return { ...p, notes: { ...(p.notes ?? {}), [chapterId]: { ...cur, [who]: text } } };
+  });
+}
+
+export function setKText(id: string, field: "label" | "unit" | "source", text: string | null) {
+  projectStore.set((p) => {
+    const kt = { ...(p.kText ?? {}) };
+    const cur = { ...(kt[id] ?? {}) };
+    if (text === null) delete cur[field];
+    else cur[field] = text;
+    if (Object.keys(cur).length) kt[id] = cur; else delete kt[id];
+    return { ...p, kText: kt };
+  });
 }
 
 export function toggleCheck(key: string) {

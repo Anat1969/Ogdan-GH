@@ -5,12 +5,14 @@ import { scenes3d } from "./scenes3d";
 const Scene3D = lazy(() => import("./Scene3D"));
 import { Icon } from "../icons";
 import { ActiveCtx, illustrations } from "./drawings";
+import { Legend } from "./Legend";
+import { illusScale } from "../../data/explain";
 
 /**
  * מסגרת המחשה: תכנית, חתך או תלת־ממד (אקסונומטרי), עם זום (גלגלת, כפתורים, צביטה), גרירה ואיפוס.
  * בתלת־ממד השרטוט מוטה, והמבנים מוגבהים בשכבות כדי לתת נפח.
  */
-export function Viewer({ id, active, tone }: { id: string; active: number | null; tone?: string }) {
+export function Viewer({ id, active, tone, items, onActive }: { id: string; active: number | null; tone?: string; items?: string[]; onActive?: (n: number | null) => void }) {
   const base = illustrations[id];
   // תלת־ממד אמיתי במקום הטיה של השרטוט, כשיש מודל
   const ill = base && scenes3d[id]
@@ -21,6 +23,7 @@ export function Viewer({ id, active, tone }: { id: string; active: number | null
   const [z, setZ] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [full, setFull] = useState(false);
+  const [legend, setLegend] = useState(false);
   const drag = useRef<{ x: number; y: number; px: number; py: number } | null>(null);
   const box = useRef<HTMLDivElement>(null);
 
@@ -46,6 +49,31 @@ export function Viewer({ id, active, tone }: { id: string; active: number | null
     return () => window.removeEventListener("keydown", k);
   }, [full]);
 
+  // ריחוף מעל דרישה: מיקוד המבט על המספר בשרטוט
+  useEffect(() => {
+    const el = box.current;
+    if (!el || reduce) return;
+    if (active === null) { setZ(1); setPan({ x: 0, y: 0 }); return; }
+    const t = window.setTimeout(() => {
+      const c = el.querySelector(".callout.on");
+      const canvas = el.querySelector(".viewer-canvas") as HTMLElement | null;
+      if (!c || !canvas) return;
+      const sr = el.getBoundingClientRect();
+      const cr = c.getBoundingClientRect();
+      const ccx = cr.left + cr.width / 2, ccy = cr.top + cr.height / 2;
+      const zf = 1.6;
+      setPan((p0) => {
+        // מיקום הנקודה ביחס למרכז הבמה, בלי ההזזה הנוכחית
+        const curZ = Number(getComputedStyle(canvas).transform.split(",")[0].replace("matrix(", "")) || 1;
+        const dx = (ccx - (sr.left + sr.width / 2) - p0.x) / curZ;
+        const dy = (ccy - (sr.top + sr.height / 2) - p0.y) / curZ;
+        return { x: -dx * zf, y: -dy * zf };
+      });
+      setZ(zf);
+    }, 40);
+    return () => window.clearTimeout(t);
+  }, [active, reduce]);
+
   if (!ill) return null;
   const cur = ill.views.find((v) => v.id === view) ?? ill.views[0];
   const Draw = cur.Draw;
@@ -68,12 +96,13 @@ export function Viewer({ id, active, tone }: { id: string; active: number | null
           <span className="mono zoom-v" aria-live="polite">{Math.round(z * 100)}%</span>
           <button type="button" className="btn sm icon" onClick={() => zoom(1.25)} aria-label="התקרבות"><Icon name="plus" size={16} /></button>
           <button type="button" className="btn sm icon" onClick={reset} aria-label="איפוס תצוגה"><Icon name="reset" size={16} /></button>
+          <button type="button" className="btn sm" onClick={() => setLegend((v) => !v)} aria-pressed={legend} data-testid="legend-btn">מקרא</button>
           <button type="button" className="btn sm icon" onClick={() => setFull((f) => !f)} aria-label={full ? "יציאה ממסך מלא" : "מסך מלא"} aria-pressed={full}><Icon name={full ? "shrink" : "expand"} size={16} /></button>
         </div>
       </header>
       <div
         ref={box}
-        className={`viewer-stage ${isAxo && !real3d ? "axo" : ""} ${real3d ? "is3d" : ""}`}
+        className={`viewer-stage ${isAxo && !real3d ? "axo" : ""} ${real3d ? "is3d" : ""} ${active !== null ? "focusing" : ""}`}
         onPointerDown={(e) => { if (real3d) return; (e.target as Element).setPointerCapture?.(e.pointerId); drag.current = { x: e.clientX, y: e.clientY, px: pan.x, py: pan.y }; }}
         onPointerMove={(e) => { const d = drag.current; if (d) setPan({ x: d.px + (e.clientX - d.x), y: d.py + (e.clientY - d.y) }); }}
         onPointerUp={() => { drag.current = null; }}
@@ -109,8 +138,23 @@ export function Viewer({ id, active, tone }: { id: string; active: number | null
             </motion.div>
           </AnimatePresence>
         </ActiveCtx.Provider>
+        <div className="title-block" aria-hidden="true">
+          <b>{ill.title}</b>
+          <span>{cur.label}{illusScale[id] && !real3d ? ` · ${illusScale[id]}` : ""}</span>
+          <span>המחשה סכמטית · מידות בבורדו</span>
+        </div>
+        {legend && <div className="legend-pop"><Legend kinds={["callout", "marker", "dim", "mass", "plot", "green", "water", "flow"]} /></div>}
       </div>
-      <figcaption className="viewer-cap">{real3d ? "גלגלת: זום · גרירה: סיבוב · ימני: הזזה." : "גלגלת: זום · גרירה: הזזה · לחיצה כפולה: הגדלה."} סכמה להמחשה, לא בקנה מידה. המספרים כמו ברשימה.</figcaption>
+      {items && items.length > 0 && (
+        <ol className="viewer-key" aria-label="מפתח מספרים">
+          {items.map((t, i) => (
+            <li key={i} className={active === i + 1 ? "on" : ""} onMouseEnter={() => onActive?.(i + 1)} onMouseLeave={() => onActive?.(null)}>
+              <span className="mono n">{i + 1}</span><span>{t.split(" ").slice(0, 5).join(" ")}{t.split(" ").length > 5 ? "…" : ""}</span>
+            </li>
+          ))}
+        </ol>
+      )}
+      <figcaption className="viewer-cap">{real3d ? "גלגלת: זום · גרירה: סיבוב · ימני: הזזה." : "גלגלת: זום · גרירה: הזזה · ריחוף על דרישה ממקד את המבט."} המספרים כמו ברשימה.</figcaption>
     </figure>
   );
 }

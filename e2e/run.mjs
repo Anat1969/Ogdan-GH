@@ -301,11 +301,9 @@ await test("ממ\"ד, כבאות ופרוגרמה: מחשבונים חדשים �
   await page.waitForTimeout(800);
   await page.screenshot({ path: SHOTS + "fire.png", fullPage: true });
   await page.goto(BASE + "/#/tool/program");
-  await page.getByTestId("units").first().fill("500"); await page.getByTestId("household").fill("3.3");
-  await page.getByLabel("גני ילדים (3 עד 6): קבוצת גיל").fill("6");
-  await page.getByLabel("גני ילדים (3 עד 6): השתתפות").fill("100");
-  await page.getByLabel("גני ילדים (3 עד 6): משתמשים ליחידה").fill("30");
-  await page.getByText("אוכלוסייה צפויה").waitFor();
+  await page.getByTestId("units").first().fill("500");
+  await page.getByText("תושבים צפויים").waitFor();
+  await page.getByText("גן ילדים (3 עד 6)").first().waitFor();
   await page.waitForTimeout(800);
   await page.screenshot({ path: SHOTS + "program.png", fullPage: true });
   for (const id of ["fire", "hfc", "program", "water"]) { await page.goto(BASE + "/#/chapter/" + id); await page.locator(".ws-title h1").first().waitFor(); }
@@ -336,6 +334,37 @@ await test("בדיקת תוכנית לפי מספר: תב/1815 מעלה דוח �
   await page.getByRole("tab", { name: /שרטוטים/ }).click();
   await page.locator(".imgpan img").waitFor();
   await page.screenshot({ path: SHOTS + "plan-images.png" });
+  assert(errors.length === 0, "console errors: " + errors.join(" | "));
+  await ctx.close();
+});
+
+await test("v6: מודל מהנתונים, דוגמה מונחית, תרשים זרימה, הערות לדוח וקישורים", async () => {
+  const { page, ctx, errors } = await newPage({ viewport: { width: 1440, height: 900 } });
+  await page.goto(BASE + "/#/tool/drainage");
+  await page.getByTestId("pviewer-drainage").waitFor();
+  await page.getByTestId("demo-start").click();
+  await page.getByTestId("demo-card").waitFor();
+  await page.locator(".pviewer canvas").first().waitFor({ timeout: 15000 });
+  await page.getByTestId("demo-next").click();
+  await page.waitForTimeout(900);
+  await page.screenshot({ path: SHOTS + "v6-tool-demo.png" });
+  await page.getByTestId("demo-end").click();
+  await page.goto(BASE + "/#/chapter/fire");
+  const n = await page.locator(".ws-tab").count();
+  await page.getByTestId(`tab-${n - 1}`).click();
+  await page.getByTestId("flow").waitFor();
+  await page.waitForTimeout(3200);
+  await page.screenshot({ path: SHOTS + "v6-flow.png" });
+  await page.getByTestId("note-authority").fill("נדרש תיאום רחבה עם רשות הכבאות");
+  await page.getByTestId("links").locator("summary").click();
+  assert(await page.locator(".links-pop a").count() >= 3, "links missing");
+  await page.goto(BASE + "/#/project");
+  await page.getByTestId("notes-report").getByText("נדרש תיאום רחבה").waitFor();
+  await page.goto(BASE + "/#/chapter/roads"); await page.getByTestId("tab-0").click();
+  await page.locator(".ws-split .checklist li").nth(1).hover();
+  await page.waitForTimeout(700);
+  await page.screenshot({ path: SHOTS + "v6-focus.png" });
+  assert(await page.locator(".viewer-key li.on").count() === 1, "key item not highlighted");
   assert(errors.length === 0, "console errors: " + errors.join(" | "));
   await ctx.close();
 });

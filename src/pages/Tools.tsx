@@ -5,6 +5,7 @@ import { toolComponents } from "../components/tools";
 import { PageHead, Sheet } from "../components/ui";
 import { Icon, IconBox, toolIcon } from "../components/icons";
 import NotFound from "./NotFound";
+import { ParamViewer } from "../components/illus/ParamViewer";
 
 export function ToolsIndex() {
   return (
@@ -37,9 +38,10 @@ export function ToolPage({ id }: { id: string }) {
   return (
     <div className={`tone-${c.tone}`}>
       <PageHead tone={c.tone} crumbs={[{ label: "בית", route: { name: "home" } }, { label: "כלים", route: { name: "tools" } }, { label: meta.title }]} label={`פרק ${c.short}`} title={meta.title} lead={meta.purpose} icon={toolIcon[meta.id]} />
-      <Sheet tone={c.tone} label="מחובר לתיק הבקשה">
-        <T />
-      </Sheet>
+      <div className="ws-split tool-split">
+        <div className="ws-scroll"><Sheet tone={c.tone} label="מחובר לתיק הבקשה"><T /></Sheet></div>
+        <ParamViewer tool={meta.id} />
+      </div>
       <p style={{ marginTop: 24 }}><a className="ic-row" href={href({ name: "chapter", id: c.id })}><Icon name="arrow" size={16} />לדרישות ולאנשי הקשר בפרק {c.title}</a></p>
     </div>
   );

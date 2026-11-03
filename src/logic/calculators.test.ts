@@ -123,7 +123,7 @@ describe("בדיקת תכנית", () => {
   });
 });
 
-import { calcFireAccess, calcLevies, calcMamad, calcProgram } from "./calculators2";
+import { calcDevObligation, calcFireAccess, calcLevies, calcMamad, calcProgram, calcProgramByUnits } from "./calculators2";
 import { DEFAULT_K } from "./constants";
 import { calcFee as feeK, calcParking as parkK } from "./calculators";
 
@@ -192,5 +192,25 @@ describe("בדיקת תוכנית בינוי לפי מספר", () => {
   it("כל 16 התוכניות נבדקות בלי שגיאה", () => {
     expect(plans.length).toBe(16);
     for (const p of plans) expect(reviewPlan(p).findings.length).toBe(11);
+  });
+});
+
+describe("פרוגרמה לפי יח\"ד ומטלת יזם", () => {
+  it("100 יח\"ד: 350 תושבים, חניות לפי מקדמים", () => {
+    const r = calcProgramByUnits(100, DEFAULT_K)!;
+    expect(r.R).toBe(Math.round(100 * DEFAULT_K["prog.household"]));
+    expect(r.parking).toBe(Math.ceil(100 * DEFAULT_K["prog.pk.res"]) + Math.ceil(100 * DEFAULT_K["prog.pk.vis"]));
+    const kinder = r.rows.find((x) => x.label.startsWith("גן ילדים"))!;
+    const kids = Math.round((r.R * DEFAULT_K["prog.kinder.pct"]) / 100);
+    expect(kinder.count).toBe(Math.ceil(kids / DEFAULT_K["prog.kinder.per"]));
+  });
+  it("מבנה ציבור מתחת לסף האוכלוסייה לא נדרש", () => {
+    const r = calcProgramByUnits(10, DEFAULT_K)!;
+    expect(r.rows.find((x) => x.label === "מרכז קהילתי")!.below).toBe(true);
+  });
+  it("מטלת יזם: שימוש לא עולה על התקרה", () => {
+    const r = calcDevObligation(20000, 400, DEFAULT_K)!;
+    expect(r.area).toBeCloseTo((20000 * DEFAULT_K["dev.rate"]) / 100);
+    for (const u of r.uses) expect(u.value).toBeLessThanOrEqual(Math.round(u.cap) + 1);
   });
 });

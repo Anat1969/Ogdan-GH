@@ -22,6 +22,8 @@ export interface Scene3 {
   prims: Prim[];
   callouts: { n: number; at: V3 }[];
   anims?: Anim[];
+  /** תוויות טקסט על המודל; dim = מידה בבורדו */
+  labels?: { at: V3; text: string; dim?: boolean }[];
 }
 
 const plot = (w: number, d: number, x = 0, z = 0): Prim => ({ t: "line", kind: "plot", dashed: true, pts: [[x - w / 2, 0.02, z - d / 2], [x + w / 2, 0.02, z - d / 2], [x + w / 2, 0.02, z + d / 2], [x - w / 2, 0.02, z + d / 2], [x - w / 2, 0.02, z - d / 2]] });

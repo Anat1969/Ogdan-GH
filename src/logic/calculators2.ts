@@ -95,3 +95,68 @@ export function calcFireAccess(fi: { height: string; road: string; stagingL: str
   ];
   return { height, road, stagingL, stagingW, toFacade, hydrant, category, checks, steps };
 }
+
+/* ---------- פרוגרמה לפי מספר יח"ד (מבוסס על אפליקציית "יועץ פרוגרמות") ---------- */
+export interface ProgRow { group: string; label: string; value: number; unit: string; detail: string; source: string; below?: boolean; count?: number; countUnit?: string }
+
+export function calcProgramByUnits(unitsIn: string | number, k: KMap = DEFAULT_K) {
+  const U = n(unitsIn);
+  if (!U) return null;
+  const coeff = k["prog.household"];
+  const R = Math.round(U * coeff);
+  const src = (id: string) => id;
+  const rows: ProgRow[] = [];
+  const edu: [string, string, string][] = [["daycare", "מעון יום (0 עד 3)", "קבוצות"], ["kinder", "גן ילדים (3 עד 6)", "כיתות"], ["elem", "בית ספר יסודי (6 עד 12)", "כיתות"], ["middle", "חטיבת ביניים (12 עד 15)", "כיתות"], ["high", "תיכון (15 עד 18)", "כיתות"]];
+  for (const [id, label, cu] of edu) {
+    const p = k[`prog.${id}.pct`], per = k[`prog.${id}.per`], m2 = k[`prog.${id}.m2`];
+    const kids = Math.round((R * p) / 100);
+    const cls = Math.ceil(kids / per);
+    rows.push({ group: "חינוך", label, value: Math.round(kids * m2), unit: 'מ"ר', count: cls, countUnit: cu, detail: `${p}% מהתושבים = ${f(kids)} ילדים · ${per} לכיתה → ${cls} ${cu} · ${m2} מ"ר לילד`, source: src(`prog.${id}.pct`) });
+  }
+  const res = Math.ceil(U * k["prog.pk.res"]), vis = Math.ceil(U * k["prog.pk.vis"]);
+  rows.push({ group: "חניה", label: "חניות דיירים", value: res, unit: "חניות", detail: `${f(U)} יח"ד × ${k["prog.pk.res"]}`, source: "prog.pk.res" });
+  rows.push({ group: "חניה", label: "חניות אורחים", value: vis, unit: "חניות", detail: `${f(U)} יח"ד × ${k["prog.pk.vis"]}`, source: "prog.pk.vis" });
+  for (const [id, label] of [["garden", "גינה שכונתית"], ["park", "פארק שכונתי"], ["sport", "מגרשי ספורט"]] as const) {
+    rows.push({ group: "שטחים פתוחים", label, value: Math.round(R * k[`prog.${id}`]), unit: 'מ"ר', detail: `${f(R)} נפש × ${k[`prog.${id}`]} מ"ר`, source: `prog.${id}` });
+  }
+  for (const [id, label] of [["community", "מרכז קהילתי"], ["clinic", "מרפאה וקופת חולים"], ["library", "ספרייה ציבורית"]] as const) {
+    const th = k[`prog.${id}.th`], min = k[`prog.${id}.min`], m2 = k[`prog.${id}.m2`];
+    const below = R < th;
+    rows.push({ group: "מבני ציבור", label, value: below ? 0 : Math.round(Math.max(min, R * m2)), unit: 'מ"ר', below, detail: below ? `סף ${f(th)} נפש טרם הושג (${f(R)} נפש)` : `${m2} מ"ר לנפש × ${f(R)} · מינימום ${f(min)}`, source: `prog.${id}.m2` });
+  }
+  const sn = Math.ceil(R / k["prog.syn.per"]);
+  rows.push({ group: "מבני ציבור", label: "בית כנסת", count: sn, countUnit: "מבנים", value: Math.round(sn * Math.max(k["prog.syn.min"], (R * k["prog.syn.m2"]) / sn)), unit: 'מ"ר', detail: `1 לכל ${f(k["prog.syn.per"])} נפש · מינימום ${k["prog.syn.min"]} מ"ר`, source: "prog.syn.per" });
+  rows.push({ group: "שירותים", label: "מסחר שכונתי", value: Math.round(R * k["prog.retail"]), unit: 'מ"ר', detail: `${f(R)} × ${k["prog.retail"]}`, source: "prog.retail" });
+  rows.push({ group: "שירותים", label: "מחסנים ואחסון", value: Math.round(U * k["prog.storage"]), unit: 'מ"ר', detail: `${f(U)} יח"ד × ${k["prog.storage"]}`, source: "prog.storage" });
+  rows.push({ group: "שירותים", label: "מרחב מוגן ציבורי", value: Math.round(R / k["prog.shelter"]), unit: 'מ"ר', detail: `1 מ"ר לכל ${k["prog.shelter"]} נפש`, source: "prog.shelter" });
+  const sumBy = (g: string) => rows.filter((r) => r.group === g && r.unit === 'מ"ר').reduce((s, r) => s + r.value, 0);
+  const steps: Step[] = [{ label: "תושבים", expr: `${f(U)} יח"ד × ${coeff} = ${f(R)} נפש` }, ...rows.map((r) => ({ label: r.label, expr: `${r.detail} → ${f(r.value)} ${r.unit}` }))];
+  return { U, R, coeff, rows, education: sumBy("חינוך"), open: sumBy("שטחים פתוחים"), public: sumBy("מבני ציבור"), parking: res + vis, steps };
+}
+
+/* ---------- מטלת יזם ---------- */
+export function calcDevObligation(siteIn: string | number, unitsIn: string | number, k: KMap = DEFAULT_K) {
+  const site = n(siteIn), U = n(unitsIn);
+  if (!site || !U) return null;
+  const R = Math.round(U * k["prog.household"]);
+  const area = (site * k["dev.rate"]) / 100;
+  const cap = (id: string) => (area * k[`dev.cap.${id}`]) / 100;
+  const use = (label: string, id: string, norm: number, th?: number) => {
+    const below = th !== undefined && R < th;
+    const v = below ? 0 : Math.min(norm, cap(id));
+    return { label, norm: below ? 0 : norm, cap: cap(id), value: Math.round(v), status: below ? "מתחת לסף" : "נדרש", detail: below ? `${f(R)} נפש, טרם הגיע לסף ${f(th!)}` : `min(נורמה ${f(norm)}, תקרה ${k[`dev.cap.${id}`]}% = ${f(cap(id))}) מ"ר` };
+  };
+  const uses = [
+    use('מרחב מוגן ציבורי', "shelter", Math.round(R / k["prog.shelter"])),
+    use("מרכז קהילתי", "community", Math.round(Math.max(k["prog.community.min"], R * k["prog.community.m2"])), k["prog.community.th"]),
+    use("מרפאה וקופת חולים", "clinic", Math.round(Math.max(k["prog.clinic.min"], R * k["prog.clinic.m2"])), k["prog.clinic.th"]),
+    use("ספרייה ציבורית", "library", Math.round(Math.max(k["prog.library.min"], R * k["prog.library.m2"])), k["prog.library.th"]),
+    use('שטח ציבורי פתוח וגינה', "spa", Math.round(R * k["prog.garden"])),
+  ];
+  const steps: Step[] = [
+    { label: "שטח המטלה", expr: `${f(site)} מ"ר × ${k["dev.rate"]}% = ${f(area)} מ"ר` },
+    { label: "תושבים", expr: `${f(U)} × ${k["prog.household"]} = ${f(R)} נפש` },
+    ...uses.map((u) => ({ label: u.label, expr: `${u.detail} → ${f(u.value)} מ"ר` })),
+  ];
+  return { site, U, R, area, uses, allocated: uses.reduce((s, u) => s + u.value, 0), steps };
+}

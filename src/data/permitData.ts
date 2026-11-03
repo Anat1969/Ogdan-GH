@@ -10,7 +10,7 @@ export interface ContactPerson {
   checked?: { status: "confirmed" | "changed" | "notfound"; date: string; source?: string; note?: string };
 }
 
-export type ToolId = "parking" | "fee" | "waste" | "drainage" | "green" | "water" | "program" | "levies" | "mamad" | "fireAccess";
+export type ToolId = "parking" | "fee" | "waste" | "drainage" | "green" | "water" | "program" | "levies" | "devob" | "mamad" | "fireAccess";
 
 export type Block =
   | { kind: "text"; title: string; body: string }
@@ -40,6 +40,13 @@ export interface Chapter {
 
 /** קיים אוגדן מעודכן יותר: "מותאם לנוהל 29-09-2025" (ashdod.muni.il/media/16515813/). האפליקציה מבוססת על נוסח 01/01/2025. */
 export const newerSource = { label: "אוגדן הנחיות מידע להיתר, מותאם לנוהל 29-09-2025", url: "https://www.ashdod.muni.il/media/16515813/", index: "https://digital.ashdod.muni.il/page/Department-Engineer-file-Instructions" };
+
+/** קישורים כלליים לכל אגף. קישורים ייעודיים נאספים מבלוקי המקורות של האגף */
+export const generalLinks = [
+  { title: "תיק מידע והנחיות, מינהל הנדסה (אתר הדיגיטל)", url: newerSource.index },
+  { title: newerSource.label, url: newerSource.url },
+  { title: "מבא\"ת: מקרא ייעודי קרקע (מינהל התכנון)", url: "https://www.gov.il/he/departments/guides/mavat" },
+];
 
 export const source = {
   title: "אוגדן הנחיות מידע להיתר לעורכי בקשה",
@@ -583,6 +590,7 @@ export const chapters: Chapter[] = [
     blocks: [
       { kind: "text", title: "למה פרוגרמה", body: "תכנית שמוסיפה יחידות דיור מוסיפה תושבים, ולכן גם ביקוש לגנים, לבתי ספר, למבני ציבור ולשטחים פתוחים. הפרוגרמה מתרגמת את מספר יח\"ד לשטחים הנדרשים, לפי נורמות ארציות ועירוניות." },
       { kind: "tool", tool: "program" },
+      { kind: "tool", tool: "devob" },
       { kind: "tool", tool: "levies" },
     ],
   },
@@ -596,7 +604,8 @@ export const tools: { id: ToolId; title: string; short: string; chapter: string;
   { id: "water", title: "מחשבון מים", short: "מים", chapter: "water", purpose: "צריכה סניטרית והשקיה שנתית, ספיקת שיא וקוטר צינור" },
   { id: "fee", title: "מחשבון אגרות", short: "אגרות", chapter: "licensing", purpose: "אומדן אגרת בנייה ופיקדון" },
   { id: "program", title: "מחשבון פרוגרמה לצורכי ציבור", short: "פרוגרמה", chapter: "program", purpose: "גנים, כיתות, מבני ציבור ושצ\"פ לפי מספר יח\"ד ונורמות שהוזנו" },
-  { id: "levies", title: "מחשבון מטלות יזם", short: "מטלות יזם", chapter: "program", purpose: "היטלי סלילה, תיעול ושצ\"פ, דמי הקמה ואגרת בנייה, לפי תעריפים שהוזנו" },
+  { id: "devob", title: "מחשבון מטלת יזם", short: "מטלת יזם", chapter: "program", purpose: "שטח מטלת יזם משטח המתחם, וחלוקתו לשימושים לפי גודל האוכלוסייה" },
+  { id: "levies", title: "מחשבון היטלים ואגרות", short: "היטלים", chapter: "program", purpose: "היטלי סלילה, תיעול ושצ\"פ, דמי הקמה ואגרת בנייה, לפי תעריפים שהוזנו" },
   { id: "mamad", title: "בדיקת ממ\"ד", short: "ממ\"ד", chapter: "hfc", purpose: "שטח נטו, נפח, גובה ועובי קיר מול המינימום, עם שרטוט בקנה מידה" },
   { id: "fireAccess", title: "בדיקת גישת כבאות", short: "כבאות", chapter: "fire", purpose: "סיווג גובה, דרך גישה, רחבת היערכות וברז כיבוי, עם סכמה צבעונית" },
 ];

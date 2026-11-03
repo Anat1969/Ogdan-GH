@@ -1,93 +1,92 @@
 // מחשבונים נוספים: פרוגרמה לצורכי ציבור, מטלות יזם (היטלים ואגרות), בדיקת ממ"ד, בדיקת גישת כבאות.
 // כל נורמה ניתנת לעריכה ונשמרת עם מקור. כשאין מקור מאומת, השדה ריק ומוסבר.
-import { useState } from "react";
-import { calcFireAccess, calcLevies, calcMamad, calcProgram } from "../logic/calculators2";
-import { defaultLevies, defaultProgram, uid, updateProject, useK, useProject, type LevyRow, type ProgramRow } from "../state/store";
-import { Icon } from "./icons";
+import { Fragment, useState } from "react";
+import { calcDevObligation, calcFireAccess, calcLevies, calcMamad, calcProgramByUnits } from "../logic/calculators2";
+import { defaultLevies, updateProject, useK, useProject, type LevyRow } from "../state/store";
 import { Metric, NumField, Stamp, Steps } from "./ui";
-import { Light, StackBar, Waffle, type Status } from "./viz";
+import { Light, StackBar, type Status } from "./viz";
 
 const fmt = (n: number, d = 0) => n.toLocaleString("he-IL", { maximumFractionDigits: d });
 
-const SourceLinks = ({ links }: { links: [string, string][] }) => (
-  <div className="sources">
-    <b>מקורות לאימוץ הנורמות</b>
-    <ol className="numlist">
-      {links.map(([t, u], i) => <li key={u}><span className="num-badge mono">{i + 1}</span><a href={u} target="_blank" rel="noreferrer">{t}</a></li>)}
-    </ol>
-  </div>
-);
 
-/* ---------------- פרוגרמה לצורכי ציבור ---------------- */
+/* ---------------- פרוגרמה לצורכי ציבור, לפי מספר יח"ד ---------------- */
 export function ProgramTool() {
   const p = useProject();
-  const prog = p.program ?? defaultProgram();
-  const r = calcProgram(p.units, prog);
-  const set = (patch: Partial<typeof prog>) => updateProject({ program: { ...prog, ...patch } });
-  const setRow = (id: string, patch: Partial<ProgramRow>) => set({ rows: prog.rows.map((x) => (x.id === id ? { ...x, ...patch } : x)) });
-  const cell = (row: ProgramRow, key: keyof ProgramRow, label: string) => (
-    <input className="input sm" type="number" min={0} step="any" value={row[key]} onChange={(e) => setRow(row.id, { [key]: e.target.value })} aria-label={`${row.name}: ${label}`} />
-  );
+  const k = useK();
+  const r = calcProgramByUnits(p.units, k);
+  const groups = r ? [...new Set(r.rows.map((x) => x.group))] : [];
   return (
     <div className="stack" data-tool="program">
-      <Stamp kind="warn" seal="נורמות" title="הנורמות ריקות עד שיוזנו ממקור מאומת">
-        המדריך הארצי להקצאת שטחים לצורכי ציבור (2016) והנחיות אשדוד לעריכת פרוגרמה (דצמבר 2025) לא היו נגישים מהסביבה שבה נבנה הכלי. מזינים את הנורמות מהמסמך, וכל שורה נשמרת בתיק הבקשה.
-      </Stamp>
       <div className="grid g3">
-        <NumField label="יחידות דיור בתכנית" value={p.units} onChange={(units) => updateProject({ units })} linked testId="units" />
-        <NumField label="גודל משק בית (נפשות ליח״ד)" value={prog.household} onChange={(household) => set({ household })} hint="לפי הלמ״ס לאשדוד או לפי המדריך" testId="household" />
-        <NumField label='שצ"פ לנפש (מ"ר)' value={prog.spaPerCapita} onChange={(spaPerCapita) => set({ spaPerCapita })} hint="לפי המדריך, לפי מדרג שכונתי או רובעי" />
+        <NumField label="יחידות דיור" value={p.units} onChange={(units) => updateProject({ units })} linked testId="units" />
+        <div className="field"><span>נפשות ליח"ד</span><b className="mono" style={{ fontSize: 20 }}>{k["prog.household"]}</b><small>מאפליקציית יועץ הפרוגרמות; ניתן לשינוי בקבועי החישוב</small></div>
       </div>
-      <label className="field"><span>מקור הנורמות שהוזנו</span><input className="input text" value={prog.source} onChange={(e) => set({ source: e.target.value })} placeholder="לדוגמה: הנחיות אשדוד לפרוגרמה, דצמבר 2025, טבלה 3" /></label>
-      <div className="table-wrap">
-        <table className="ktable">
-          <thead><tr><th>#</th><th>שירות</th><th>קבוצת גיל, % מהאוכלוסייה</th><th>השתתפות, %</th><th>משתמשים ליחידה</th><th>מגרש ליחידה, דונם</th><th>בנוי ליחידה, מ"ר</th><th>יחידות</th><th>מגרש, דונם</th></tr></thead>
-          <tbody>
-            {prog.rows.map((row, i) => {
-              const rr = r?.rows.find((x) => x.id === row.id);
-              return (
-                <tr key={row.id}>
-                  <td className="num">{i + 1}</td>
-                  <td style={{ minWidth: 150 }}><input className="input sm text" value={row.name} onChange={(e) => setRow(row.id, { name: e.target.value })} aria-label="שם השירות" /></td>
-                  <td>{cell(row, "cohortPct", "קבוצת גיל")}</td>
-                  <td>{cell(row, "participation", "השתתפות")}</td>
-                  <td>{cell(row, "perUnit", "משתמשים ליחידה")}</td>
-                  <td>{cell(row, "plotPerUnit", "מגרש ליחידה")}</td>
-                  <td>{cell(row, "builtPerUnit", "בנוי ליחידה")}</td>
-                  <td className="num"><b>{rr?.ok ? rr.units : "—"}</b></td>
-                  <td className="num">{rr?.ok ? fmt(rr.plot, 2) : "—"}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-      <div className="row">
-        <button type="button" className="btn sm" onClick={() => set({ rows: [...prog.rows, { id: uid(), name: "שירות נוסף", cohortPct: "", participation: "", perUnit: "", plotPerUnit: "", builtPerUnit: "" }] })}><Icon name="plus" size={14} />הוספת שירות</button>
-        <button type="button" className="btn sm ghost" onClick={() => set(defaultProgram())}><Icon name="reset" size={14} />איפוס הטבלה</button>
-      </div>
-      {r && r.population > 0 && (
+      {!r && <p className="muted" style={{ fontSize: 14 }} data-testid="empty-state">הזינו מספר יחידות דיור, והפרוגרמה תחושב לפי הנורמות.</p>}
+      {r && (
         <>
           <div className="grid g4">
-            <Metric hero v={Math.round(r.population)} k="אוכלוסייה צפויה" n={`${p.units} יח״ד × ${prog.household}`} />
-            <Metric v={fmt(r.totalPlot, 2)} u="דונם" k="קרקע למבני ציבור" />
-            <Metric v={fmt(r.totalBuilt)} u='מ"ר' k="שטח בנוי לשירותים" />
-            <Metric v={r.spa !== null ? fmt(r.spa / 1000, 2) : "—"} u="דונם" k='שצ"פ נדרש' />
+            <Metric hero v={r.R} k="תושבים צפויים" n={`${r.U} יח"ד × ${r.coeff}`} />
+            <Metric v={r.education} u='מ"ר' k="חינוך" />
+            <Metric v={r.open} u='מ"ר' k="שטחים פתוחים" />
+            <Metric v={r.public} u='מ"ר' k="מבני ציבור" n={`חניות ${r.parking}`} />
           </div>
-          {r.rows.filter((x) => x.ok && x.plot > 0).length > 0 && (
-            <StackBar label="קרקע לפי שירות" unit="דונם" segments={r.rows.filter((x) => x.ok && x.plot > 0).map((x, i) => ({ label: x.name, value: x.plot, shade: ([3, 1, 2, 4, 0] as const)[i % 5] }))} />
-          )}
-          {r.rows.some((x) => x.ok) && (
-            <Waffle label="יחידות לפי שירות" groups={r.rows.filter((x) => x.ok).map((x, i) => ({ label: x.name, count: x.units, kind: (["solid", "mid", "ring", "dot", "light"] as const)[i % 5] }))} />
-          )}
-          <Steps steps={r.steps} limits="הכלי מחשב לפי הנורמות שהוזנו. סדרי גודל, מדרג (שכונתי, רובעי, עירוני) ושילוב שירותים במבנה משותף נקבעים מול אגף הפרוגרמות בעירייה." />
+          <StackBar label="חלוקת השטחים" unit='מ"ר' segments={[{ label: "חינוך", value: r.education, shade: 3 }, { label: "שטחים פתוחים", value: r.open, shade: 1 }, { label: "מבני ציבור", value: r.public, shade: 2 }]} />
+          <div className="table-wrap">
+            <table className="ktable">
+              <thead><tr><th>#</th><th>שירות</th><th>כמות</th><th>שטח</th><th>חישוב</th></tr></thead>
+              <tbody>
+                {groups.map((g) => (
+                  <Fragment key={g}>
+                    <tr className="group-row"><td colSpan={5}>{g}</td></tr>
+                    {r.rows.filter((x) => x.group === g).map((x) => (
+                      <tr key={x.label} style={{ opacity: x.below ? 0.55 : 1 }}>
+                        <td className="num">{r.rows.indexOf(x) + 1}</td>
+                        <td>{x.label}</td>
+                        <td className="num">{x.count !== undefined ? `${x.count} ${x.countUnit}` : "—"}</td>
+                        <td className="num">{x.below ? "מתחת לסף" : `${fmt(x.value)} ${x.unit}`}</td>
+                        <td className="muted" style={{ fontSize: 12 }}>{x.detail}</td>
+                      </tr>
+                    ))}
+                  </Fragment>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <Steps steps={r.steps} limits="הנורמות מאפליקציית יועץ הפרוגרמות; כולן ניתנות לשינוי ומסומנות לאימות מול המדריך להקצאת שטחים לצורכי ציבור והנחיות אשדוד לפרוגרמה." />
         </>
       )}
-      <SourceLinks links={[
-        ["מדריך להקצאת שטחים לצורכי ציבור, מנהל התכנון, 2016", "https://www.gov.il/BlobFolder/generalpage/guide_allocation_land_public_needs/he/Guide_allocation_land_public_purposes.pdf"],
-        ["הנחיות לעריכת מסמך פרוגרמה לצורכי ציבור, עיריית אשדוד, דצמבר 2025", "https://www.ashdod.muni.il/media/16516695/הנחיות-לעריכת-מסמך-פרוגרמה-לצורכי-ציבור-דצמבר-2025-מונגש-pdfua.pdf"],
-        ["עדכון פרק בתי ספר במגרשים קומפקטיים, 2018", "https://www.gov.il/BlobFolder/guide/compact_schools/he/education_compact_schools_.pdf"],
-      ]} />
+    </div>
+  );
+}
+
+/* ---------------- מטלת יזם ---------------- */
+export function DevObligationTool() {
+  const p = useProject();
+  const k = useK();
+  const r = calcDevObligation(p.plot, p.units, k);
+  return (
+    <div className="stack" data-tool="devob">
+      <div className="grid g3">
+        <NumField label='שטח המתחם (מ"ר)' value={p.plot} onChange={(plot) => updateProject({ plot })} linked testId="plot" />
+        <NumField label="יחידות דיור" value={p.units} onChange={(units) => updateProject({ units })} linked testId="units" />
+      </div>
+      {!r && <p className="muted" style={{ fontSize: 14 }} data-testid="empty-state">הזינו שטח מתחם ויחידות דיור.</p>}
+      {r && (
+        <>
+          <div className="grid g3">
+            <Metric hero v={Math.round(r.area)} u='מ"ר' k="שטח מטלת יזם" n={`${fmt(r.site)} × ${k["dev.rate"]}%`} />
+            <Metric v={r.R} k="תושבים צפויים" />
+            <Metric v={r.allocated} u='מ"ר' k="הוקצה לשימושים" n={`${Math.round((r.allocated / r.area) * 100)}% מהמטלה`} />
+          </div>
+          <div className="table-wrap">
+            <table className="ktable">
+              <thead><tr><th>#</th><th>שימוש</th><th>מצב</th><th>שטח</th><th>חישוב</th></tr></thead>
+              <tbody>{r.uses.map((u, i) => <tr key={u.label}><td className="num">{i + 1}</td><td>{u.label}</td><td>{u.status}</td><td className="num">{fmt(u.value)} מ"ר</td><td className="muted" style={{ fontSize: 12 }}>{u.detail}</td></tr>)}</tbody>
+            </table>
+          </div>
+          <Steps steps={r.steps} limits="שיעור 5.5% והתקרות מאפליקציית יועץ הפרוגרמות, בלי מקור רשמי מצוטט. לאימות." />
+        </>
+      )}
     </div>
   );
 }

@@ -10,6 +10,7 @@ import { Icon } from "../components/icons";
 import { Progress, useToast } from "../components/ui";
 import { Ring } from "../components/viz";
 import { NumericCheck } from "./CheckNumeric";
+import { NotesReport } from "../components/NotesReport";
 
 const plans = (plansData as { plans: PlanRecord[] }).plans;
 const vStatus: Record<Verdict, "ok" | "bad" | "warn" | "idle"> = { ok: "ok", bad: "bad", missing: "bad", review: "warn" };
@@ -96,6 +97,7 @@ function Report({ plan }: { plan: PlanRecord }) {
           <ol>{r.facts.reliefs.slice(0, 5).map((x, i) => <li key={i}>{x.slice(0, 160)}</li>)}</ol>
         </section>
       )}
+      <NotesReport compact />
       <footer className="r2-foot muted">
         הבדיקה מזהה התייחסות, מספרים ואישורים בחוות הדעת ובשדות התוכנית, ומשווה למקדמי האוגדן. היא כלי עזר לפורום היועצים ואינה מחליפה את בדיקת הגורם המקצועי. מקור הנתונים: תיק תוכנית הבינוי במערכת התוכניות של העירייה. הופק {new Date().toLocaleDateString("he-IL")}.
       </footer>
