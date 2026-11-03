@@ -180,7 +180,7 @@ await test("ספר טלפונים: חיפוש וסינון לפי מחלקה", a
   const { page, ctx } = await newPage({ viewport: { width: 1280, height: 900 } });
   await page.goto(BASE + "/#/contacts");
   const all = await page.getByTestId("person").count();
-  assert(all === 28, `expected 28 contacts, got ${all}`);
+  assert(all === 30, `expected 30 contacts, got ${all}`);
   await page.getByTestId("contacts-search").fill("פיקוח");
   const f = await page.getByTestId("person").count();
   assert(f > 0 && f < all, "search did not filter");

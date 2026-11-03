@@ -1,6 +1,6 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
-import { source } from "./data/permitData";
+import { newerSource, source } from "./data/permitData";
 import { CommandPalette, TopBar } from "./components/shell";
 import { ToastProvider, useToast } from "./components/ui";
 import Chapter from "./pages/Chapter";
@@ -62,6 +62,7 @@ function Shell() {
           </AnimatePresence>
           <footer className="foot">
             <span>מבוסס על {source.title}, {source.publisher}, נוסח {source.version}.</span>
+            <span>קיים נוסח מעודכן: <a href={newerSource.url} target="_blank" rel="noreferrer">{newerSource.label}</a>. אנשי קשר עודכנו חלקית מול אתרי העירייה, 11/2026.</span>
             <span>כלי עזר לעורכי בקשה. אינו מחליף את בדיקת הרשות.</span>
           </footer>
         </main>

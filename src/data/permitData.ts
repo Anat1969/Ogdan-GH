@@ -38,6 +38,9 @@ export interface Chapter {
   blocks: Block[];
 }
 
+/** קיים אוגדן מעודכן יותר: "מותאם לנוהל 29-09-2025" (ashdod.muni.il/media/16515813/). האפליקציה מבוססת על נוסח 01/01/2025. */
+export const newerSource = { label: "אוגדן הנחיות מידע להיתר, מותאם לנוהל 29-09-2025", url: "https://www.ashdod.muni.il/media/16515813/", index: "https://digital.ashdod.muni.il/page/Department-Engineer-file-Instructions" };
+
 export const source = {
   title: "אוגדן הנחיות מידע להיתר לעורכי בקשה",
   publisher: "עיריית אשדוד, מינהל הנדסה",
@@ -61,7 +64,7 @@ export const bankAccounts = [
   { bank: "איגוד", bankNum: "13", branch: "71", account: "80400043", iban: "IL470130710000080400043" },
 ];
 
-export const paymentNote = "לאחר ביצוע תשלום יש להעביר אסמכתא והודעת חיוב במייל: agrot@asdod.muni.il";
+export const paymentNote = "לאחר ביצוע תשלום יש להעביר אסמכתא והודעת חיוב במייל: agrot@ashdod.muni.il (בגרסת האוגדן הופיע בטעות asdod; תוקן לפי אתר הדיגיטל, 11/2026)";
 
 export const wasteVolumeTable = [
   { type: "דירת מגורים", unit: "יח\"ד", volumePerUnit: 7, note: "ליטר ליום" },
@@ -83,14 +86,15 @@ export const chapters: Chapter[] = [
     department: "מחלקת רישוי",
     hours: "קבלת קהל: א'-ה', 8:30-12:00 | טלפוני: 8:30-11:00",
     contacts: [
-      { name: "ג'ני רוזנבלט", role: "מנהלת אגף רישוי", phone: "08-8545322", email: "geni@ashdod.muni.il" },
-      { name: "אורלי אסייג", role: "מנהלת מחלקת רישוי", phone: "08-9238613", email: "orlyass@ashdod.muni.il" },
-      { name: "סילס שריס", role: "מזכירת מחלקת רישוי", phone: "08-8545319", email: "cecil@ashdod.muni.il" },
-      { name: "שרונה פנסו", role: "רכזת בקשות להיתר", phone: "08-8545384", email: "sharonap@ashdod.muni.il" },
-      { name: "גלינה ליפוביץ", role: "בודקת רישוי", phone: "08-9568127", email: "galinali@ashdod.muni.il" },
-      { name: "רימה פלקין", role: "בודקת רישוי", phone: "08-9568243", email: "rimafalkin@ashdod.muni.il" },
-      { name: "ליליה נוטקין", role: "בודקת רישוי", phone: "08-9568339", email: "lelya@ashdod.muni.il" },
-      { name: "עדן יפרח", role: "מנהלת מחלקת התחדשות עירונית", phone: "08-8545383", email: "edeno@ashdod.muni.il" },
+      { name: "ג'ני רוזנבלט", role: "מנהלת מחלקת רישוי בנייה", phone: "08-8545322", email: "geni@ashdod.muni.il", checked: { status: "changed", date: "11/2026", source: "https://www.ashdod.muni.il/he-il/אתר-העיר/הנדסה/רישוי-בנייה/", note: "תואר התפקיד באתר העירייה: מנהלת מחלקת רישוי בנייה. הטלפון שבאתר הוא קו המחלקה 08-8545319" } },
+      { name: "אורלי אסייג", role: "מנהלת מחלקת רישוי", phone: "08-9238613", email: "orlyass@ashdod.muni.il", checked: { status: "notfound", date: "11/2026" } },
+      { name: "סילס שריס", role: "מזכירת מחלקת רישוי", phone: "08-8545319", email: "cecil@ashdod.muni.il", checked: { status: "notfound", date: "11/2026" } },
+      { name: "שרונה פנסו", role: "רכזת בקשות להיתר", phone: "08-8545384", email: "sharonap@ashdod.muni.il", checked: { status: "notfound", date: "11/2026" } },
+      { name: "גלינה ליפוביץ", role: "בודקת רישוי", phone: "08-9568127", email: "galinali@ashdod.muni.il", checked: { status: "notfound", date: "11/2026" } },
+      { name: "רימה פלקין", role: "בודקת רישוי", phone: "08-9568243", email: "rimafalkin@ashdod.muni.il", checked: { status: "notfound", date: "11/2026" } },
+      { name: "ליליה נוטקין", role: "בודקת רישוי", phone: "08-9568339", email: "lelya@ashdod.muni.il", checked: { status: "notfound", date: "11/2026" } },
+      { name: "ליאור לוי", role: "מנהל מינהלת התחדשות עירונית", phone: "08-9238701", email: "liorlev@ashdod.muni.il", checked: { status: "confirmed", date: "11/2026", note: "חדש, מדף ההתחדשות העירונית באתר העירייה" } },
+      { name: "עדן יפרח", role: "מנהלת מחלקת התחדשות עירונית", phone: "08-8545383", email: "edeno@ashdod.muni.il", checked: { status: "notfound", date: "11/2026", note: "בדף ההתחדשות העירונית מופיע ליאור לוי כמנהל המינהלת; התפקיד של עדן יפרח לא אומת" } },
     ],
     blocks: [
       {
@@ -118,7 +122,7 @@ export const chapters: Chapter[] = [
       {
         kind: "contactInfo",
         title: "הזמנת תיק בניין והיתרים קודמים",
-        lines: ["מענה טלפוני: א'-ה', 8:00-12:00", "טלפונים: 08-8545327, 08-8545153", "דוא\"ל: archiv@ashdod.muni.il"],
+        lines: ["מענה טלפוני: א'-ה', 8:00-12:00", "טלפונים: 08-8545327, 08-8545153 (אומת באתר העירייה, 11/2026)", "דוא\"ל: archiv@ashdod.muni.il", "מנהלת הארכיון: שרלי אוחנה, 08-8545327, sharlib@ashdod.muni.il"],
         alert: "תיק בניין שהוזמן יישאר בארכיון 10 ימים מקבלתו, ולאחר מכן יוחזר לגנזך.",
       },
       { kind: "bank" },
@@ -134,11 +138,12 @@ export const chapters: Chapter[] = [
     department: "מחלקת פיקוח",
     hours: "קבלת קהל: בזימון מראש | טלפוני: א'-ה', 8:30-11:00",
     contacts: [
-      { name: "כרמית סיני", role: "מנהלת מחלקת פיקוח", phone: "08-8545320", email: "karmitsi@ashdod.muni.il" },
-      { name: "שירה אטדגי", role: "סגנית מנהלת מחלקת פיקוח", phone: "08-8545320", email: "shiraa@ashdod.muni.il" },
-      { name: "שושנה אסור", role: "מזכירת מחלקת פיקוח", phone: "08-8545320", email: "shosha@ashdod.muni.il" },
-      { name: "פליקס מזיבינסקי", role: "מפקח רובע ט\"ז, ב'", phone: "08-9238335", email: "felixm@ashdod.muni.il" },
-      { name: "חן אלמליח", role: "מפקחת רובע י\"ז, ד', חוף הים", phone: "08-8545331", email: "chenelmaliah@ashdod.muni.il" },
+      { name: "כרמית סיני", role: "מנהלת פיקוח בנייה", phone: "08-8545310", email: "karmitsi@ashdod.muni.il", checked: { status: "changed", date: "11/2026", source: "https://www.ashdod.muni.il/he-il/אתר-העיר/הנדסה/פיקוח-בנייה/", note: "באוגדן: 08-8545320" } },
+      { name: "שירה אטדגי", role: "סגנית מנהלת מחלקת פיקוח", phone: "08-8545320", email: "shiraa@ashdod.muni.il", checked: { status: "confirmed", date: "11/2026", source: "https://www.ashdod.muni.il/he-il/אתר-העיר/הנדסה/פיקוח-בנייה/", note: "שם ותפקיד אומתו; הטלפון לא הופיע" } },
+      { name: "אודליה פרטוש", role: "מזכירת מחלקת פיקוח בנייה", phone: "08-8545885", email: "odeliapar@ashdod.muni.il", checked: { status: "confirmed", date: "11/2026", source: "https://www.ashdod.muni.il/he-il/אתר-העיר/הנדסה/פיקוח-בנייה/", note: "חדשה, מאתר העירייה" } },
+      { name: "שושנה אסור", role: "מנהלת מדור בקרה", phone: "08-8545320", email: "shosha@ashdod.muni.il", checked: { status: "changed", date: "11/2026", source: "https://www.ashdod.muni.il/he-il/אתר-העיר/הנדסה/פיקוח-בנייה/", note: "באוגדן: מזכירת מחלקת פיקוח. המזכירה כיום: אודליה פרטוש" } },
+      { name: "פליקס מזיבינסקי", role: "מפקח רובע ט\"ז, ב'", phone: "08-9238335", email: "felixm@ashdod.muni.il", checked: { status: "confirmed", date: "11/2026", source: "https://www.ashdod.muni.il/media/16515813/", note: "מופיע באוגדן המעודכן 29-09-2025" } },
+      { name: "חן אלמליח", role: "מפקחת רובע י\"ז, ד', חוף הים", phone: "08-8545331", email: "chenelmaliah@ashdod.muni.il", checked: { status: "confirmed", date: "11/2026", source: "https://www.ashdod.muni.il/media/16515813/", note: "מופיעה באוגדן המעודכן 29-09-2025" } },
     ],
     blocks: [
       {
@@ -177,10 +182,10 @@ export const chapters: Chapter[] = [
     hours: "טלפוני: א'-ה', 8:30-11:00 | קבלת קהל: בזימון מראש",
     contacts: [
       { name: "לריסה קגנוב", role: "מנהלת מח' תכנון כבישים", phone: "08-8545290", email: "larisak@ashdod.muni.il" },
-      { name: "דימיטרי שנדיבין", role: "מנהל מחלקת תנועה", phone: "08-9238964", email: "dimitrysh@ashdod.muni.il" },
-      { name: "יבגני אברבוך", role: "אזה\"ת צפוני, מבני ים", phone: "08-8545295", email: "evgenyav@ashdod.muni.il" },
-      { name: "גליה בלומין", role: "בינוי, פינוי", phone: "08-8545291", email: "galyab@ashdod.muni.il" },
-      { name: "יאיר רבניא", role: "רפרנט תיאום תשתיות", phone: "08-9238714", email: "yairra@ashdod.muni.il" },
+      { name: "דימיטרי שנדיבין", role: "מנהל מחלקת תנועה", phone: "08-9238964", email: "dimitrysh@ashdod.muni.il", checked: { status: "confirmed", date: "11/2026", note: "שם ותפקיד בכתבה מ-2024; טלפון ודוא\"ל לא אומתו" } },
+      { name: "יבגני אברבוך", role: "אזה\"ת צפוני, מבני ים", phone: "08-8545295", email: "evgenyav@ashdod.muni.il", checked: { status: "notfound", date: "11/2026" } },
+      { name: "גליה בלומין", role: "בינוי, פינוי", phone: "08-8545291", email: "galyab@ashdod.muni.il", checked: { status: "notfound", date: "11/2026" } },
+      { name: "יאיר רבניא", role: "רפרנט תיאום תשתיות", phone: "08-9238714", email: "yairra@ashdod.muni.il", checked: { status: "notfound", date: "11/2026" } },
     ],
     blocks: [
       {
@@ -227,8 +232,8 @@ export const chapters: Chapter[] = [
     department: "אגף ניקוז ונחלים",
     hours: "קבלת קהל: בזימון מראש",
     contacts: [
-      { name: "מירון יעקובוב", role: "מנהל אגף ניקוז ונחלים", phone: "08-8545956", email: "miron@ashdod.muni.il" },
-      { name: "קרן שרייבר", role: "מזכירת מחלקה", phone: "08-8545347", email: "keren@ashdod.muni.il" },
+      { name: "מירון יעקובוב", role: "מנהל אגף ניקוז ונחלים", phone: "08-8545956", email: "miron@ashdod.muni.il", checked: { status: "confirmed", date: "11/2026", source: "https://www.ashdod.muni.il/media/16515813/", note: "מופיע באוגדן 29-09-2025; בפרוטוקול מועצה 01/2025 מוזכרת פרישה של בעל תפקיד, לא ברור אם הוא. לבדוק בטלפון" } },
+      { name: "קרן שרייבר", role: "מזכירת מחלקה", phone: "08-8545347", email: "keren@ashdod.muni.il", checked: { status: "notfound", date: "11/2026" } },
     ],
     blocks: [
       {
@@ -291,7 +296,7 @@ export const chapters: Chapter[] = [
     hours: "קבלת קהל: א'-ה', 8:00-13:00, בזימון מראש",
     contacts: [
       { name: "יוחאי אמיר", role: "מנהל אגף החשמל", phone: "08-8545340", email: "amiry@ashdod.muni.il" },
-      { name: "אוריאן גדג'", role: "רפרנט רמזורים ואחזקת מאור", phone: "08-9568354", email: "oriangu@ashdod.muni.il" },
+      { name: "אוריאן גדג'", role: "רפרנט רמזורים ואחזקת מאור", phone: "08-9568354", email: "oriangu@ashdod.muni.il", checked: { status: "notfound", date: "11/2026", note: "באוגדן 2022 הופיע יורם שמש כמנהל יחידת רמזורים ומאור (08-8545336)" } },
       { name: "תומר כהן", role: "סגן מנהל מח' חשמל מב\"צ", phone: "08-8545185", email: "tomerc@ashdod.muni.il" },
     ],
     blocks: [
@@ -344,8 +349,8 @@ export const chapters: Chapter[] = [
     department: "מחלקת בקרה וכלי אצירה",
     hours: "קבלת קהל: בזימון מראש",
     contacts: [
-      { name: "קובי זינו", role: "מנהל מחלקת בקרה טכנולוגית", phone: "08-8634863", email: "kobi@ashdod.muni.il" },
-      { name: "עופר עמר", role: "מנהל מחלקת אשפה ומחזור", phone: "08-8634887", email: "oferamar@ashdod.muni.il" },
+      { name: "קובי זינו", role: "מנהל מחלקת בקרה טכנולוגית", phone: "08-8634863", email: "kobi@ashdod.muni.il", checked: { status: "confirmed", date: "11/2026", source: "https://www.ashdod.muni.il/media/16515813/", note: "מופיע באוגדן המעודכן 29-09-2025" } },
+      { name: "עופר עמר", role: "סגן מנהל אגף תפו\"ח, מנהל מחלקת אשפה ומחזור", phone: "08-8634871", email: "oferamar@ashdod.muni.il", checked: { status: "changed", date: "11/2026", source: "https://www.ashdod.muni.il/he-il/אתר-העיר/תפעול/תברואה-פיקוח-וחניה/", note: "באוגדן: 08-8634887" } },
     ],
     blocks: [
       {
@@ -375,7 +380,7 @@ export const chapters: Chapter[] = [
     department: "תאגיד המים יובלים",
     hours: "כתובת: רחוב אורט 18, קומה 6, פורט-סי",
     contacts: [
-      { name: "מקסים פטליס", role: "מהנדס מח' תכנון", phone: "08-8628906", email: "maxim@yuvallim.co.il" },
+      { name: "מקסים פטליס", role: "מהנדס מח' תכנון", phone: "08-8628906", email: "maxim@yuvallim.co.il", checked: { status: "notfound", date: "11/2026", note: "באתר יובלים פורסמה משרת מהנדס/ת מחלקת תכנון; ייתכן שהתפקיד התחלף" } },
       { name: "מזכירות", role: "מח' תכנון", phone: "08-8544333", email: "" },
     ],
     blocks: [
@@ -427,7 +432,7 @@ export const chapters: Chapter[] = [
     tone: "nature",
     department: "איגוד ערים לאיכות הסביבה",
     hours: "כתובת: רחוב יאיר 2, אשדוד",
-    contacts: [{ name: "איתי מירז", role: "מרכז תכנון סביבתי", phone: "08-8519500", email: "eitay@env.org.il" }],
+    contacts: [{ name: "איתי מירז", role: "מרכז תכנון סביבתי", phone: "08-8519500", email: "eitay@env.org.il", checked: { status: "notfound", date: "11/2026", note: "נמצא רק בדוח שנתי מ-2011" } }],
     blocks: [
       {
         kind: "checklist",
