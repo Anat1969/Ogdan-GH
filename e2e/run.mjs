@@ -375,6 +375,24 @@ await test("v6: מודל מהנתונים, דוגמה מונחית, תרשים �
   await ctx.close();
 });
 
+await test("גריד אחיד: בלי גלילת דף ב-1440×900 וב-1280×800, כותרת באותו גובה בכל הדפים", async () => {
+  for (const [w, h] of [[1440, 900], [1280, 800]]) {
+    const { page, ctx } = await newPage({ viewport: { width: w, height: h } });
+    const heads = [];
+    for (const r of ["/", "/tools", "/tool/drainage", "/tool/program", "/chapter/licensing", "/chapter/fire", "/contacts", "/project", "/check"]) {
+      await page.goto(BASE + "/#" + r);
+      await page.waitForTimeout(500);
+      const over = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
+      assert(over <= 2, `${r} at ${w}x${h} scrolls by ${over}px`);
+      const nav = await page.evaluate(() => { const n = document.querySelector(".navrow"); return n ? n.scrollWidth - n.clientWidth : 0; });
+      assert(nav <= 1, `nav overflows at ${w}: ${nav}px`);
+      if (r !== "/") heads.push(await page.locator(".ws-head").first().evaluate((el) => Math.round(el.getBoundingClientRect().top)));
+    }
+    assert(new Set(heads).size === 1, `header top differs between pages: ${heads.join(",")}`);
+    await ctx.close();
+  }
+});
+
 await test("דף שלא קיים מציג הודעה ברורה", async () => {
   const { page, ctx } = await newPage();
   await page.goto(BASE + "/#/nope");

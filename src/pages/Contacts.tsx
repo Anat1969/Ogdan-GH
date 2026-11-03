@@ -47,7 +47,7 @@ export default function Contacts() {
       <nav className="ws-tabs ws-tabs-quiet" aria-label="סינון לפי מחלקה">
         <button type="button" className="ws-tab" aria-pressed={dep === "all"} aria-selected={dep === "all"} onClick={() => setDep("all")}><span className="ws-tab-t">הכול</span><span className="mono muted">{directory.length}</span></button>
         {withContacts.map((c) => (
-          <button key={c.id} type="button" className="ws-tab" aria-pressed={dep === c.id} aria-selected={dep === c.id} onClick={() => setDep(c.id)}><span className="mono ws-tab-no">{String(chapters.indexOf(c) + 1).padStart(2, "0")}</span><span className="ws-tab-t">{c.short}</span><span className="mono muted">{c.contacts.length}</span></button>
+          <button key={c.id} type="button" className="ws-tab" aria-label={c.short} aria-pressed={dep === c.id} aria-selected={dep === c.id} onClick={() => setDep(c.id)}><span className="mono ws-tab-no">{String(chapters.indexOf(c) + 1).padStart(2, "0")}</span><span className="ws-tab-t">{c.short}</span><span className="mono muted">{c.contacts.length}</span></button>
         ))}
       </nav>
       <div className="ws-scroll ws-full">
