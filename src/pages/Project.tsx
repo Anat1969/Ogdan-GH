@@ -46,38 +46,17 @@ export default function Project() {
   const empty = !p.plot && !p.units && !p.gfa && !parking.hasInput;
 
   return (
-    <div>
-      <PageHead crumbs={[{ label: "בית", route: { name: "home" } }, { label: "תיק הבקשה" }]} label="נשמר אוטומטית בדפדפן" title="תיק הבקשה" icon="folder" lead="נתוני הפרויקט מוזנים כאן פעם אחת ומזינים את כל המחשבונים. הדוח למטה מסכם כמויות, חוסרים ודרישות פתוחות, ומוכן להדפסה.">
-        <div className="row no-print" style={{ marginTop: 8 }}>
+    <div className="ws page-project">
+      <PageHead crumbs={[{ label: "בית", route: { name: "home" } }, { label: "תיק הבקשה" }]} label="נשמר אוטומטית בדפדפן" title="תיק הבקשה" icon="folder" lead="נתוני הפרויקט מוזנים פעם אחת ומזינים את כל המחשבונים. הדוח מסכם כמויות, חוסרים ודרישות פתוחות, ומוכן להדפסה.">
+        <div className="row no-print">
           <button type="button" className="btn primary" onClick={() => window.print()} data-testid="print"><Icon name="print" size={16} />הדפסת הדוח</button>
           {empty && <button type="button" className="btn" onClick={() => projectStore.set(exampleProject())} data-testid="load-example">טעינת פרויקט לדוגמה</button>}
         </div>
       </PageHead>
 
-      <div className="stack">
-        <Sheet title="פרטי הפרויקט" label="שדות משותפים לכל המחשבונים" className="no-print">
-          <div className="stack">
-            <div className="grid g2">
-              <label className="field"><span>שם הפרויקט</span><input className="input text" value={p.name} onChange={(e) => updateProject({ name: e.target.value })} placeholder="לדוגמה: מגדל מגורים, מגרש 12" data-testid="project-name" /></label>
-              <label className="field"><span>כתובת, גוש וחלקה</span><input className="input text" value={p.address} onChange={(e) => updateProject({ address: e.target.value })} placeholder="רחוב, רובע, גוש/חלקה" /></label>
-            </div>
-            <div className="grid g3">
-              <NumField label='שטח מגרש (מ"ר)' value={p.plot} onChange={(plot) => updateProject({ plot })} linked testId="plot" />
-              <NumField label='תכסית מבנה (מ"ר)' value={p.footprint} onChange={(footprint) => updateProject({ footprint })} linked testId="footprint" />
-              <NumField label='שטח ירוק מחלחל (מ"ר)' value={p.green} onChange={(green) => updateProject({ green })} linked testId="green" />
-              <NumField label="יחידות דיור" value={p.units} onChange={(units) => updateProject({ units })} linked testId="units" />
-              <NumField label="קומות" value={p.floors} onChange={(floors) => updateProject({ floors })} linked testId="floors" />
-              <NumField label='שטח בנייה מוצע (מ"ר)' value={p.gfa} onChange={(gfa) => updateProject({ gfa })} linked testId="gfa" />
-            </div>
-            <div className="spread">
-              <span className="muted" style={{ fontSize: 14 }}>מסלול הגשה</span>
-              <Seg label="מסלול הגשה" value={p.track} onChange={(track) => updateProject({ track })} options={permitTracks.map((t) => ({ value: t.id as typeof p.track, label: `${t.days} ימים` }))} />
-            </div>
-            <p className="muted" style={{ fontSize: 13 }}>שימושים לחניה ולמים מוגדרים בתוך המחשבונים עצמם: <a href={href({ name: "tool", id: "parking" })}>חניה</a>, <a href={href({ name: "tool", id: "water" })}>מים</a>.</p>
-          </div>
-        </Sheet>
-
-        {/* הדוח */}
+      <div className="ws-body proj-body">
+        <div className="ws-scroll proj-report">
+                  {/* הדוח */}
         <section className="sheet report a4" aria-label="דוח תיק הבקשה" data-testid="report">
           <header className="spread" style={{ borderBottom: "2px solid var(--ink)", paddingBottom: 12, marginBottom: 20, alignItems: "flex-end" }}>
             <div>
@@ -111,7 +90,7 @@ export default function Project() {
               <div className="rings">
                 {per.filter((x) => x.keys.length).map(({ c, keys, done: d }) => (
                   <a key={c.id} href={href({ name: "chapter", id: c.id })} style={{ textDecoration: "none" }}>
-                    <Ring value={d / keys.length} label={c.short} sub={`${d}/${keys.length}`} size={84} />
+                    <Ring value={d / keys.length} label={c.short} sub={`${d}/${keys.length}`} size={60} />
                   </a>
                 ))}
               </div>
@@ -170,6 +149,31 @@ export default function Project() {
             הדוח הוא כלי עזר לעורך הבקשה. החישובים הם אומדן לפי מקדמי האוגדן ותקנים מקובלים, ואינם מחליפים את בדיקת מחלקת הרישוי, היועצים ואיש המקצוע החותם.
           </p>
         </section>
+        </div>
+        <aside className="ws-scroll proj-inputs no-print" aria-label="פרטי הפרויקט">
+        <Sheet title="פרטי הפרויקט" label="שדות משותפים לכל המחשבונים" className="no-print">
+          <div className="stack">
+            <div className="grid g2">
+              <label className="field"><span>שם הפרויקט</span><input className="input text" value={p.name} onChange={(e) => updateProject({ name: e.target.value })} placeholder="לדוגמה: מגדל מגורים, מגרש 12" data-testid="project-name" /></label>
+              <label className="field"><span>כתובת, גוש וחלקה</span><input className="input text" value={p.address} onChange={(e) => updateProject({ address: e.target.value })} placeholder="רחוב, רובע, גוש/חלקה" /></label>
+            </div>
+            <div className="grid g3">
+              <NumField label='שטח מגרש (מ"ר)' value={p.plot} onChange={(plot) => updateProject({ plot })} linked testId="plot" />
+              <NumField label='תכסית מבנה (מ"ר)' value={p.footprint} onChange={(footprint) => updateProject({ footprint })} linked testId="footprint" />
+              <NumField label='שטח ירוק מחלחל (מ"ר)' value={p.green} onChange={(green) => updateProject({ green })} linked testId="green" />
+              <NumField label="יחידות דיור" value={p.units} onChange={(units) => updateProject({ units })} linked testId="units" />
+              <NumField label="קומות" value={p.floors} onChange={(floors) => updateProject({ floors })} linked testId="floors" />
+              <NumField label='שטח בנייה מוצע (מ"ר)' value={p.gfa} onChange={(gfa) => updateProject({ gfa })} linked testId="gfa" />
+            </div>
+            <div className="spread">
+              <span className="muted" style={{ fontSize: 14 }}>מסלול הגשה</span>
+              <Seg label="מסלול הגשה" value={p.track} onChange={(track) => updateProject({ track })} options={permitTracks.map((t) => ({ value: t.id as typeof p.track, label: `${t.days} ימים` }))} />
+            </div>
+            <p className="muted" style={{ fontSize: 13 }}>שימושים לחניה ולמים מוגדרים בתוך המחשבונים עצמם: <a href={href({ name: "tool", id: "parking" })}>חניה</a>, <a href={href({ name: "tool", id: "water" })}>מים</a>.</p>
+          </div>
+        </Sheet>
+
+        </aside>
       </div>
     </div>
   );

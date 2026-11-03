@@ -213,7 +213,8 @@ await test("תנועה מופחתת ומצב כהה: הדף מציג את כל �
   const { page, ctx } = await newPage({ viewport: { width: 1280, height: 900 }, reducedMotion: "reduce", colorScheme: "dark" });
   await page.goto(BASE + "/#/");
   assert(await page.locator(".legend a").count() === 12, "legend missing under reduced motion");
-  assert(await page.getByTestId("chapter-card-water").isVisible(), "chapter cards missing");
+  assert(await page.locator('.legend a[href="#/chapter/water"]').isVisible(), "chapter legend missing");
+  assert(await page.getByTestId("home-tool-drainage").isVisible(), "tools summary missing");
   await page.screenshot({ path: SHOTS + "home-dark-reduced.png" });
   await ctx.close();
 });

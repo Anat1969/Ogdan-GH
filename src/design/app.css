@@ -1100,3 +1100,145 @@ body { font-size: clamp(15px, 0.35vw + 13.6px, 17px); }
 .page-tool .page-head .iconbox { width: 40px !important; height: 40px !important; }
 .page-tool .page-head > .label { display: none; }
 @media (min-width: 1000px) { .tool-split { height: calc(100vh - 190px); } }
+
+/* =====================================================================
+   v7: גריד אחיד ומסכים קומפקטיים
+   כל דף = .ws: שורת כותרת אחת (אייקון | כותרת והסבר | פעולות), שורת לשוניות אם יש,
+   וגוף שממלא את גובה המסך. גלילה רק בתוך המסגרות, לא בדף.
+   עמודת צד אחת ברוחב קבוע (--side) בכל הדפים שיש בהם צד.
+   ===================================================================== */
+:root { --side: clamp(240px, 18vw, 300px); --head-h: 54px; }
+
+/* ניווט עליון: מספרי אגפים; שם מלא רק לאגף הפעיל, ובמסכים רחבים לכולם */
+.navrow { gap: 0; mask-image: none; }
+.navlink { padding-inline: 7px; font-size: 13.5px; white-space: nowrap; }
+.navlink .nav-no { font-family: var(--mono); font-size: 12.5px; }
+@media (max-width: 1799px) {
+  .navlink.is-ch:not([aria-current="page"]) .nav-t { display: none; }
+  .navlink.is-ch:not([aria-current="page"]) { padding-inline: 6px; color: var(--gray-dark); }
+}
+.navlink.is-ch + .navlink:not(.is-ch) { margin-inline-start: 10px; border-inline-start: 1px solid var(--gray-light); }
+
+/* כותרת אחידה: אותו גובה ואותו גריד בכל הדפים */
+.ws-head, .page-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; min-height: var(--head-h); padding: 0 0 8px; margin: 0; border-bottom: 1px solid var(--gray-light); }
+.ws-head .ws-icon, .page-head .ws-icon { width: 40px !important; height: 40px !important; background: none; color: var(--ink); border: 1px solid var(--gray-mid); }
+.ws-title { min-width: 0; display: grid; gap: 1px; }
+.ws-title .crumbs { font-size: 11.5px; margin: 0; }
+.ws-title h1, .page-head h1 { font-size: clamp(20px, 1.2vw + 10px, 28px) !important; font-weight: 300; line-height: 1.15; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ws-title p { font-size: 12.5px; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: none; color: var(--gray-dark); }
+.ws-no { background: none; color: var(--gray-mid); padding: 0 4px 0 0; }
+.ws-meta { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
+.ws-progress { width: 180px; }
+.ph-acts .input.sm { height: 34px; min-width: 260px; font-size: 13px; }
+@media (max-width: 760px) {
+  .ws-title h1, .ws-title p { white-space: normal; }
+  .ws-meta { justify-content: flex-start; }
+}
+
+/* לשוניות: שורה אחת, גובה קבוע, טקסט בשורה אחת */
+.ws-tab { min-height: 38px; padding: 6px 10px; }
+.ws-tab-t { -webkit-line-clamp: 1; white-space: nowrap; text-overflow: ellipsis; display: block; }
+.ws-tab-no { background: none; color: var(--gray-mid); padding: 0; }
+.ws-tabs-quiet { grid-auto-columns: minmax(0, auto); justify-content: start; }
+
+/* גוף: עמודת צד אחידה */
+@media (min-width: 1000px) {
+  .ws-body { grid-template-columns: minmax(0, 1fr) var(--side); }
+  .ws-body.ws-body-1 { grid-template-columns: minmax(0, 1fr); }
+  .ws.page-tool, .ws.page-project { grid-template-rows: auto minmax(0, 1fr); }
+  .ws.page-contacts { grid-template-rows: auto auto minmax(0, 1fr); }
+  .tool-split { height: auto !important; min-height: 0 !important; }
+  .ws-full { overflow-y: auto; }
+}
+.ws-side { min-height: 0; }
+
+/* מחשבון: הטופס בגלילה פנימית, המודל ממלא את הגובה */
+.page-tool .ws-scroll { padding-inline-end: 4px; }
+.page-tool .ws-scroll .stack { gap: 12px; }
+.pviewer { display: flex; flex-direction: column; min-height: 0; }
+.pviewer .pviewer-body { min-height: 0; }
+.pviewer .viewer-stage { min-height: 0; height: auto; }
+@media (max-width: 999px) { .pviewer .viewer-stage { min-height: 320px; } }
+
+/* כרטיסי ביקור קומפקטיים: שם ותפקיד, ואז טלפון ודוא"ל בשורה */
+.ws-cards { padding: 0 10px; gap: 0; }
+.bcards { gap: 0; }
+.bcard { padding: 7px 0; gap: 3px; border: 0; border-bottom: 1px solid var(--gray-light); background: none; box-shadow: none; }
+.bcard .num-badge { display: none; }
+.bcard-who { grid-auto-flow: row; padding: 0; }
+.bcard-who b { font-size: 13px; }
+.bcard-who span { font-size: 11.5px; }
+.bcard-acts { display: flex; flex-wrap: wrap; gap: 0 10px; }
+.bcard-line { font-size: 11.5px; padding: 0; }
+.bcard-check { font-size: 10.5px; }
+
+/* ספר טלפונים: שלוש עמודות של שורות קומפקטיות */
+.person-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 0 24px; }
+.person-grid .person { padding: 6px 0; gap: 8px; border-bottom: 1px solid var(--gray-light); }
+.person-grid .person b { font-size: 13.5px; font-weight: 500; }
+.person-grid .person .role { font-size: 11.5px; }
+.person-grid .person .acts .btn { min-height: 28px; padding: 2px 8px; font-size: 12px; }
+.person-grid .person .acts .btn.ghost { padding: 2px 4px; }
+
+/* תיק הבקשה: הדוח (סיכום) רחב, פרטי הפרויקט בצד */
+@media (min-width: 1000px) { .proj-body { grid-template-columns: minmax(0, 1fr) clamp(300px, 24vw, 380px); } }
+.proj-inputs .sheet { padding: 12px; }
+.proj-inputs .grid.g2, .proj-inputs .grid.g3 { grid-template-columns: 1fr 1fr; gap: 8px; }
+.proj-inputs .field > span { font-size: 12px; }
+.proj-inputs .input { height: 36px; }
+.proj-report .report { margin: 0; padding: 16px 20px; }
+.proj-report .report h3 { font-size: 15px !important; }
+.proj-report .metric .v { font-size: 26px; }
+
+/* מסגרות פנימיות: ריווח אחיד */
+.frame { padding: 10px 12px; }
+.frame-head { gap: 10px; margin-bottom: 8px; }
+.frame-head h3 { font-size: 17px; }
+.checklist li .check { padding-block: 4px; }
+.ws-foot { padding-top: 6px; }
+.ws-foot .btn { min-height: 32px; }
+
+/* v7: אינדקס מחשבונים: רשימה ממוספרת דחוסה, בלי צבעי אגפים */
+@media (min-width: 1000px) { .ws.page-tools { grid-template-rows: auto minmax(0, 1fr); } }
+.tool-index { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 0 28px; }
+.tool-index a { display: grid; grid-template-columns: 22px 20px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--gray-light); color: var(--ink); text-decoration: none; }
+.tool-index a:hover { background: color-mix(in srgb, #f2d34f 14%, transparent); }
+.tool-index .n { color: var(--gray-mid); font-size: 12px; }
+.tool-index .tt { display: grid; min-width: 0; }
+.tool-index .tt b { font-weight: 500; font-size: 14.5px; }
+.tool-index .tt span { font-size: 12px; color: var(--gray-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tool-index .ch { font-size: 11.5px; color: var(--gray-mid); }
+
+/* ספר טלפונים: שורה אחת לתפקיד, דוא"ל כאייקון */
+.person-grid .person .role { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.person-grid .person > div:first-child { flex: 1; }
+.person-grid .person > div:first-child > div { min-width: 0; overflow: hidden; }
+.person-grid .mail-t { display: none; }
+.person-grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+
+/* בלי צבע אגף בתוך הדפים */
+.ws .lu-chip { display: none; }
+
+/* v7: דף בית במסך אחד: סיכום (כותרת, נתונים, התקדמות, תוצאות המחשבונים) לצד המודל ומפתח האגפים */
+.home-one { display: block; }
+.home-hero { min-height: 0; gap: clamp(16px, 2vw, 40px); align-items: start; padding-top: 4px; }
+@media (min-width: 1000px) {
+  .home-hero { height: calc(100dvh - var(--bar) - 2 * var(--ws-gap)); align-items: center; }
+  .page:has(.home-one) .wrap { padding-block: var(--ws-gap) 0; }
+  .page:has(.home-one) .foot { display: none; }
+}
+.home-hero h1 { font-size: clamp(36px, 4.6vw, 72px); }
+.home-hero .lead { font-size: clamp(14px, 1.1vw, 16px); }
+.hero-text { gap: 12px; }
+.hero-stats { margin-top: 4px; }
+.hero-meter { margin-top: 0; }
+.home-tools { list-style: none; margin: 4px 0 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; max-width: 560px; }
+.home-tools a { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; gap: 8px; align-items: baseline; padding: 4px 0; border-bottom: 1px solid var(--gray-light); color: var(--ink); text-decoration: none; font-size: 13px; }
+.home-tools a:hover { background: color-mix(in srgb, #f2d34f 14%, transparent); }
+.home-tools .n { color: var(--gray-mid); font-size: 11px; }
+.home-tools .t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.home-tools .v { font-size: 12px; color: var(--gray-dark); }
+@media (max-width: 560px) { .home-tools { grid-template-columns: 1fr; } }
+.proj-report .rings { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 6px; }
+.proj-report .viz-grid { gap: 20px; margin-bottom: 14px !important; }
+.proj-report .stamp { padding: 6px 10px; }

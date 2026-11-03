@@ -1,14 +1,11 @@
 import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "framer-motion";
 import { useState } from "react";
-import { allChecklistKeys, chapters, directory, permitTracks, source, tools } from "../data/permitData";
+import { allChecklistKeys, chapters, directory, source, tools } from "../data/permitData";
 import { calcDrainage, calcFee, calcGreen, calcParking, calcWaste, calcWater } from "../logic/calculators";
 import { href, navigate } from "../state/router";
 import { useChecks, useK, useProject } from "../state/store";
 import { Progress } from "../components/ui";
-import { IconBox, chapterIcon, toolIcon } from "../components/icons";
 import { CountUp, statusOf } from "../components/viz";
-import { landUse, landUseSource, landUses } from "../data/landuse";
-import { mutedTone } from "../design/tone";
 
 const totalReqs = chapters.reduce((s, c) => s + allChecklistKeys(c).length, 0);
 
@@ -81,7 +78,6 @@ export default function Home() {
   const k = useK();
   const reduce = useReducedMotion();
   const doneAll = Object.values(checks).filter(Boolean).length;
-  const maxDays = Math.max(...permitTracks.map((t) => t.days));
 
   const preview: Record<string, string | null> = {
     parking: (() => { const r = calcParking(p.parking, p.standard, k); return r.hasInput ? `${r.total} חניות` : null; })(),
@@ -93,7 +89,7 @@ export default function Home() {
   };
 
   return (
-    <div className="stack" style={{ gap: 72 }}>
+    <div className="home-one">
       {/* פתיח */}
       <section className="home-hero">
         <div className="hero-text">
@@ -123,6 +119,17 @@ export default function Home() {
             </div>
             <Progress value={doneAll / totalReqs} label="התקדמות כוללת" />
           </div>
+          <ol className="home-tools" aria-label="מחשבונים ותוצאות מהתיק">
+            {tools.map((t, i) => (
+              <li key={t.id}>
+                <a href={href({ name: "tool", id: t.id })} data-testid={`home-tool-${t.id}`}>
+                  <span className="mono n">{i + 1}</span>
+                  <span className="t">{t.title.replace(/^(מחשבון|בדיקת) /, "")}</span>
+                  <span className="mono v">{preview[t.id] ?? "—"}</span>
+                </a>
+              </li>
+            ))}
+          </ol>
         </div>
         <div className="hero-model">
           <Tower active={active} setActive={setActive} progress={progress} />
@@ -143,123 +150,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* חזון, מטרה, כלים, תוצאות */}
-      <section className="grid g4 pillars">
-        {[
-          ["חזון", "עורך בקשה שמגיש פעם אחת, שלם ומדויק, בלי סבב תיקונים."],
-          ["מטרה", "לתרגם אוגדן של עשרות עמודים למסלול עבודה: מה נדרש, ממי, ומתי."],
-          ["כלים", "רשימות דרישות שנשמרות, 6 מחשבונים עם חישוב שקוף, ספר טלפונים וחיפוש בכל האוגדן."],
-          ["תוצאות", "דוח תיק בקשה להדפסה, עם כל הכמויות, החוסרים והדרישות הפתוחות."],
-        ].map(([t, b], i) => (
-          <motion.div key={t} className="pillar" initial={reduce ? false : { opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}>
-            <span className="label">{String(i + 1).padStart(2, "0")}</span>
-            <h3>{t}</h3>
-            <p>{b}</p>
-          </motion.div>
-        ))}
-      </section>
-
-      {/* מסלולים */}
-      <section className="stack" style={{ gap: 20 }}>
-        <div className="spread">
-          <h2 className="h2">מסלולי הגשה לרשות הרישוי</h2>
-          <span className="label">ימי עבודה לטיפול</span>
-        </div>
-        <div className="tracks">
-          {permitTracks.map((t, i) => (
-            <div key={t.id} className={`track ${p.track === t.id ? "mine" : ""}`}>
-              <div className="spread" style={{ marginBottom: 8 }}>
-                <span><b style={{ fontWeight: 500 }}>{t.name}</b> <span className="muted" style={{ fontSize: 13 }}>{t.description}</span></span>
-                <span className="mono" style={{ fontSize: 22 }}>{t.days}<span className="muted" style={{ fontSize: 13 }}> ימים</span></span>
-              </div>
-              <div className="track-bar">
-                <motion.i style={{ width: `${(t.days / maxDays) * 100}%`, transformOrigin: "right" }} initial={reduce ? false : { scaleX: 0 }} whileInView={{ scaleX: 1 }} viewport={{ once: true }} transition={{ duration: 0.9, delay: i * 0.12, ease: [0.2, 0.7, 0.2, 1] }} />
-                {[...Array(Math.floor(maxDays / 15))].map((_, k) => <span key={k} style={{ insetInlineStart: `${((k + 1) * 15 / maxDays) * 100}%` }} />)}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* פרקים */}
-      <section className="stack" style={{ gap: 20 }}>
-        <div className="spread">
-          <h2 className="h2">פרקי האוגדן</h2>
-          <span className="label">{totalReqs} דרישות לסימון</span>
-        </div>
-        <div className="grid g3">
-          {chapters.map((c, i) => (
-            <a key={c.id} className={`card-link tone-${c.tone} tick`} href={href({ name: "chapter", id: c.id })} data-testid={`chapter-card-${c.id}`}>
-              <IconBox name={chapterIcon[c.id]} />
-              <span className="label" style={{ display: "block" }}>אגף {String(i + 1).padStart(2, "0")}</span>
-              <span className="go" aria-hidden="true">←</span>
-              <h3>{String(i + 1).padStart(2, "0")} {c.title}</h3>
-              <p>{c.description}</p>
-              <div style={{ marginTop: 14 }}>
-                {progress[c.id].total > 0 ? (
-                  <>
-                    <div className="spread" style={{ fontSize: 12, marginBottom: 4 }}><span className="muted">{c.contacts.length} אנשי קשר</span><span className="mono">{progress[c.id].done}/{progress[c.id].total}</span></div>
-                    <Progress value={progress[c.id].ratio} label={`התקדמות ${c.short}`} />
-                  </>
-                ) : (
-                  <span className="muted" style={{ fontSize: 12 }}>פרק הנחיות ומחשבון</span>
-                )}
-              </div>
-            </a>
-          ))}
-        </div>
-      </section>
-
-      {/* מקרא צבעים */}
-      <section className="stack" style={{ gap: 16 }} data-testid="lu-legend">
-        <div className="spread">
-          <h2 className="h2">מקרא צבעים</h2>
-          <span className="label">צבעי האגפים לפי מקרא ייעודי הקרקע (מבא"ת)</span>
-        </div>
-        <div className="lu-legend">
-          {chapters.map((c, i) => {
-            const lu = landUse(c.tone);
-            return (
-              <a key={c.id} className="lu-chip" href={href({ name: "chapter", id: c.id })} style={{ textDecoration: "none" }}>
-                <i style={{ background: mutedTone(lu.hex).fill }} className={lu.hatched ? "hatched" : ""} />
-                <b className="mono">{String(i + 1).padStart(2, "0")}</b> {c.short} <span className="muted">· {lu.name}</span>
-              </a>
-            );
-          })}
-        </div>
-        <details className="kpanel">
-          <summary><b>המקרא המלא</b><span className="muted">{landUseSource.status}</span></summary>
-          <div className="doc-body">
-            <div className="lu-legend">
-              {landUses.map((l) => <span key={l.key} className="lu-chip"><i style={{ background: mutedTone(l.hex).fill }} className={l.hatched ? "hatched" : ""} />{l.name} <span className="muted mono">{l.code || ""} {l.hex}</span></span>)}
-            </div>
-            <p className="muted" style={{ fontSize: 12 }}>מקור: <a href={landUseSource.url} target="_blank" rel="noreferrer">{landUseSource.label}</a>.</p>
-          </div>
-        </details>
-      </section>
-
-      {/* כלים */}
-      <section className="stack" style={{ gap: 20 }}>
-        <div className="spread">
-          <h2 className="h2">מחשבונים</h2>
-          <span className="label">מחוברים לתיק הבקשה</span>
-        </div>
-        <div className="grid g3">
-          {tools.map((t) => {
-            const c = chapters.find((x) => x.id === t.chapter)!;
-            return (
-              <a key={t.id} className={`card-link tone-${c.tone}`} href={href({ name: "tool", id: t.id })}>
-                <IconBox name={toolIcon[t.id]} />
-                <span className="label" style={{ display: "block" }}>{c.short}</span>
-                <span className="go" aria-hidden="true">←</span>
-                <h3>{t.title}</h3>
-                <p>{t.purpose}</p>
-                <div className="mono" style={{ marginTop: 12, fontSize: 20, color: "var(--tone)", minHeight: 30 }}>{preview[t.id] ?? <span className="muted" style={{ fontSize: 13, fontFamily: "var(--sans)" }}>ממתין לנתונים</span>}</div>
-              </a>
-            );
-          })}
-        </div>
-      </section>
     </div>
   );
 }

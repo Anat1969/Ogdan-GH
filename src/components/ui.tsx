@@ -139,16 +139,18 @@ export function Crumbs({ items }: { items: { label: string; route?: Route }[] })
   );
 }
 
+/** כותרת דף אחידה, באותו גריד כמו כותרת האגף: אייקון | כותרת והסבר בשורה אחת | פעולות */
 export function PageHead({ crumbs, title, lead, label, tone, children, icon }: { crumbs?: { label: string; route?: Route }[]; title: string; lead?: string; label?: string; tone?: string; children?: ReactNode; icon?: string }) {
-  const reduce = useReducedMotion();
   return (
-    <motion.header className={`page-head ${tone ? `tone-${tone}` : ""}`} initial={reduce ? false : { opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-      {crumbs && <Crumbs items={crumbs} />}
-      {label && <span className="label">{label}</span>}
-      {icon ? <div className="ic-row" style={{ gap: 16 }}><span className="iconbox" style={{ width: 56, height: 56 }} aria-hidden="true"><Icon name={icon} size={28} /></span><h1>{title}</h1></div> : <h1>{title}</h1>}
-      {lead && <p>{lead}</p>}
-      {children}
-    </motion.header>
+    <header className={`ws-head page-head ${tone ? `tone-${tone}` : ""}`}>
+      {icon ? <span className="iconbox ws-icon" aria-hidden="true"><Icon name={icon} size={22} /></span> : <span />}
+      <div className="ws-title">
+        {crumbs && <Crumbs items={label ? [...crumbs, { label }] : crumbs} />}
+        <h1>{title}</h1>
+        {lead && <p className="muted" title={lead}>{lead}</p>}
+      </div>
+      {children ? <div className="ws-meta ph-acts">{children}</div> : <span />}
+    </header>
   );
 }
 

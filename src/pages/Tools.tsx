@@ -2,28 +2,33 @@ import { useEffect } from "react";
 import { chapters, tools } from "../data/permitData";
 import { href } from "../state/router";
 import { toolComponents } from "../components/tools";
-import { PageHead, Sheet } from "../components/ui";
-import { Icon, IconBox, toolIcon } from "../components/icons";
+import { PageHead } from "../components/ui";
+import { Icon, toolIcon } from "../components/icons";
 import NotFound from "./NotFound";
 import { ParamViewer } from "../components/illus/ParamViewer";
 
 export function ToolsIndex() {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const list = [...tools].sort((x, y) => chapters.findIndex((c) => c.id === x.chapter) - chapters.findIndex((c) => c.id === y.chapter));
   return (
-    <div>
-      <PageHead crumbs={[{ label: "בית", route: { name: "home" } }, { label: "כלים" }]} label="6 מחשבונים" title="מחשבונים" lead="כל המחשבונים קוראים מתיק בקשה אחד. שדה שמסומן כמשותף, כמו שטח מגרש, מתעדכן בכל המחשבונים ובדוח בבת אחת." />
-      <div className="grid g3">
-        {tools.map((t) => {
-          const c = chapters.find((x) => x.id === t.chapter)!;
-          return (
-            <a key={t.id} className={`card-link tone-${c.tone} tick`} href={href({ name: "tool", id: t.id })} data-testid={`tool-card-${t.id}`}>
-              <IconBox name={toolIcon[t.id]} />
-              <span className="label" style={{ display: "block" }}>{c.short}</span>
-              <span className="go" aria-hidden="true">←</span>
-              <h3>{t.title}</h3>
-              <p>{t.purpose}</p>
-            </a>
-          );
-        })}
+    <div className="ws page-tools">
+      <PageHead crumbs={[{ label: "בית", route: { name: "home" } }, { label: "כלים" }]} title="מחשבונים" icon="calc" lead={`${tools.length} מחשבונים שקוראים מתיק בקשה אחד. שדה משותף, כמו שטח מגרש, מתעדכן בכולם ובדוח בבת אחת.`} />
+      <div className="ws-scroll ws-full">
+        <ol className="tool-index">
+          {list.map((t, i) => {
+            const ci = chapters.findIndex((x) => x.id === t.chapter);
+            return (
+              <li key={t.id}>
+                <a href={href({ name: "tool", id: t.id })} data-testid={`tool-card-${t.id}`}>
+                  <span className="mono n">{i + 1}</span>
+                  <Icon name={toolIcon[t.id]} size={18} />
+                  <span className="tt"><b>{t.title}</b><span>{t.purpose}</span></span>
+                  <span className="mono ch">{pad(ci + 1)} {chapters[ci].short}</span>
+                </a>
+              </li>
+            );
+          })}
+        </ol>
       </div>
     </div>
   );
@@ -36,13 +41,14 @@ export function ToolPage({ id }: { id: string }) {
   const c = chapters.find((x) => x.id === meta.chapter)!;
   const T = toolComponents[meta.id];
   return (
-    <div className={`page-tool tone-${c.tone}`}>
-      <PageHead tone={c.tone} crumbs={[{ label: "בית", route: { name: "home" } }, { label: "כלים", route: { name: "tools" } }, { label: meta.title }]} label={`פרק ${c.short}`} title={meta.title} lead={meta.purpose} icon={toolIcon[meta.id]} />
+    <div className={`ws page-tool tone-${c.tone}`}>
+      <PageHead tone={c.tone} crumbs={[{ label: "בית", route: { name: "home" } }, { label: "כלים", route: { name: "tools" } }, { label: meta.title }]} title={meta.title} lead={meta.purpose} icon={toolIcon[meta.id]}>
+        <a className="btn sm" href={href({ name: "chapter", id: c.id })}><Icon name="arrow" size={14} />לדרישות ולאנשי הקשר: {c.short}</a>
+      </PageHead>
       <div className="ws-split tool-split">
-        <div className="ws-scroll"><Sheet tone={c.tone} label="מחובר לתיק הבקשה"><T /></Sheet></div>
+        <div className="ws-scroll"><T /></div>
         <ParamViewer tool={meta.id} />
       </div>
-      <p style={{ marginTop: 24 }}><a className="ic-row" href={href({ name: "chapter", id: c.id })}><Icon name="arrow" size={16} />לדרישות ולאנשי הקשר בפרק {c.title}</a></p>
     </div>
   );
 }

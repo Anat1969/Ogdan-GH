@@ -170,8 +170,8 @@ function SavedIndicator() {
   return <span className="saved" role="status" aria-live="polite" style={{ opacity: show ? 1 : 0 }} data-testid="saved">נשמר</span>;
 }
 
-const navItems: { label: string; route: Route; tone?: string }[] = [
-  ...chapters.map((c, i) => ({ label: `${String(i + 1).padStart(2, "0")} ${c.short}`, route: { name: "chapter", id: c.id } as Route, tone: c.tone })),
+const navItems: { label: string; route: Route; tone?: string; no?: string; t?: string }[] = [
+  ...chapters.map((c, i) => ({ label: `${String(i + 1).padStart(2, "0")} ${c.short}`, no: String(i + 1).padStart(2, "0"), t: c.short, route: { name: "chapter", id: c.id } as Route, tone: c.tone })),
   { label: "כלים", route: { name: "tools" } },
   { label: "טלפונים", route: { name: "contacts" } },
   { label: "תיק הבקשה", route: { name: "project" } },
@@ -193,8 +193,8 @@ export function TopBar({ route, onSearch }: { route: Route; onSearch: () => void
         </a>
         <nav className="navrow" aria-label="ניווט ראשי">
           {navItems.map((n) => (
-            <a key={href(n.route)} className={`navlink ${n.tone ? `tone-${n.tone}` : ""}`} href={href(n.route)} aria-current={isCurrent(route, n.route) ? "page" : undefined}>
-              {n.label}
+            <a key={href(n.route)} className={`navlink ${n.no ? "is-ch" : ""}`} href={href(n.route)} aria-current={isCurrent(route, n.route) ? "page" : undefined} title={n.label} aria-label={n.label}>
+              {n.no ? <><span className="nav-no">{n.no}</span><span className="nav-t"> {n.t}</span></> : n.label}
             </a>
           ))}
         </nav>
