@@ -10,6 +10,11 @@
 The top bar holds only the app name (links home), content navigation, and ONE logo button "אד' ענת שטיבלמן A&I" (`<ai-menu>` from https://appofapp-gh.vercel.app/ai-menu.js). Every editing and development action (העתקת קישור, שיחת הפיתוח, פרויקט המחקר, התקנת האפליקציה, edit mode, add, delete) lives only inside it, never as loose buttons. Standard: https://github.com/Anat1969/AppOfApp-GH/blob/main/docs/ai-menu-standard.md
 כשהסקריפט החיצוני לא נטען (רשת חסומה, לא מקוון), `src/components/shell.tsx` מציג תחליף מקומי עם אותם פריטים ואותה התנהגות סגירה.
 
+## פריסה (החלטת ענת, 2026-11-04)
+- **בחשבון Claude העירוני (anatdavids@ashdod.muni.il) פורסים תמיד** בסוף כל סבב עבודה: דוחפים ל-main (fast-forward מהענף) ואז לענף, ומוודאים שהפריסה ב-Vercel הגיעה ל-READY. אם Vercel לא בנה מ-main: `create_deployment` עם gitSource של main.
+- בחשבון אחר: לא פורסים בלי בקשה; נותנים קישור githack לתיקייה `preview/`.
+- Vercel: פרויקט `prj_pI1YtuyddDCm2lOjKWRpiyZX3Pe0`, צוות `team_UNONu5KtfgMgLtVno6fdCtrQ`.
+
 ## כללים לפרויקט הזה
 - כל תוכן מקצועי יושב ב-`src/data/permitData.ts`. אין טקסט מקצועי ברכיבי UI.
 - כל נוסחה יושבת ב-`src/logic/calculators.ts`, עם בדיקת יחידה ב-`calculators.test.ts`. שינוי מקדם מחייב עדכון בדיקה.
